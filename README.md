@@ -1,10 +1,3 @@
-# Template Repo
+# Orbital
 
-This is a starter template for Python projects.
-
-## Structure
-
-- `src/`: Source code
-- `tests/`: Unit tests
-- `data/`: Data files
-- `logs/`: Log files
+This section is intentionally reserved for upcoming project details and expansions.

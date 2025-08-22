@@ -29,7 +29,7 @@ services:
     container_name: prefect_init
     command: >
       /bin/bash -c "
-        sleep 5 &&
+        sleep 10 &&
         prefect work-pool create data_ingestion --type process || true
       "
     environment:
