@@ -65,8 +65,8 @@ def query_confirmed_planets():
 def run_data_ingestion():
     tick = time.time()
     minio_bucket = os.getenv("MINIO_BUCKET_NAME")
-    nasa_donki_url = os.getenv("NASA_DONKI_API")
-    nasa_apod_url = os.getenv("NASA_APOD_API")
+    nasa_donki_url = f"{os.getenv('NASA_DONKI_API')}{os.getenv('NASA_API_KEY')}"
+    nasa_apod_url = f"{os.getenv('NASA_APOD_API')}{os.getenv('NASA_API_KEY')}"
     nasa_donki_filename = "nasa_donki.parquet"
     nasa_apod_filename = "nasa_apod.parquet"
 
