@@ -11,27 +11,11 @@ from astroquery.ipac.nexsci.nasa_exoplanet_archive import NasaExoplanetArchive
 logger = setup_logging()
 load_dotenv()
 
-
 def fetch_api_data(base_url):
-    limit = 50000
-    offset = 0
-    all_data = []
-
-    batch = [None]  # considered falsy for break at `[]`
-    total_records = 0
-    while batch:
-        paged_url = f"{base_url}?$limit={limit}&$offset={offset}"
-        response = requests.get(paged_url)
-        response.raise_for_status()
-        batch = response.json()
-        if not batch:
-            break
-        all_data.extend(batch)
-        total_records += len(batch)
-        logger.info(f"Fetched batch starting at record {offset}, total records fetched: {total_records}")
-        offset += limit
-
-    api_data_dataframe = pl.DataFrame(all_data)
+    response = requests.get(base_url)
+    response.raise_for_status()
+    data = response.json()
+    api_data_dataframe = pl.DataFrame(data)
     return api_data_dataframe
 
 
