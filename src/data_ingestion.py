@@ -48,15 +48,21 @@ def query_confirmed_planets():
 
 def run_data_ingestion():
     tick = time.time()
+
     minio_bucket = os.getenv("MINIO_BUCKET_NAME")
+
     nasa_donki_url = f"{os.getenv('NASA_DONKI_API')}{os.getenv('NASA_API_KEY')}"
     nasa_apod_url = f"{os.getenv('NASA_APOD_API')}{os.getenv('NASA_API_KEY')}"
+    astronaut_url = os.getenv("THE_SPACE_DEVS_API")
+
     nasa_donki_filename = "nasa_donki.parquet"
     nasa_apod_filename = "nasa_apod.parquet"
+    nasa_exoplanets_filename = "nasa_exoplanets.parquet"
+    astronaut_filename = "astronauts.parquet"
 
     exoplanets_parquet_buffer = query_confirmed_planets()
     logger.info("Writing Exoplanets Data to MinIO Storage")
-    write_data_to_minio(exoplanets_parquet_buffer, minio_bucket, "exoplanets.parquet", "RAW")
+    write_data_to_minio(exoplanets_parquet_buffer, minio_bucket, nasa_exoplanets_filename, "RAW")
 
     logger.info("Fetching NASA DONKI Data from API")
     nasa_donki_dataframe = fetch_api_data(nasa_donki_url)
@@ -69,6 +75,12 @@ def run_data_ingestion():
     nasa_apod_parquet_buffer = convert_dataframe_to_parquet(nasa_apod_dataframe)
     logger.info("Writing NASA APOD Data to MinIO Storage")
     write_data_to_minio(nasa_apod_parquet_buffer, minio_bucket, nasa_apod_filename, "RAW")
+
+    logger.info("Fetching Astronaut Data from LL2 API")
+    astronaut_dataframe = fetch_api_data(astronaut_url)
+    astronaut_parquet_buffer = convert_dataframe_to_parquet(astronaut_dataframe)
+    logger.info("Writing Astronaut Data to MinIO Storage")
+    write_data_to_minio(astronaut_parquet_buffer, minio_bucket, astronaut_filename, "RAW")
 
     tock = time.time() - tick
 
