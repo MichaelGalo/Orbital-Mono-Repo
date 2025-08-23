@@ -206,3 +206,5 @@ __marimo__/
 data/
 *.db
 orbital.db
+catalog.ducklake
+.vscode
