@@ -12,6 +12,13 @@ logger = setup_logging()
 load_dotenv()
 
 def fetch_api_data(base_url):
+    if base_url == os.getenv("THE_SPACE_DEVS_API"):
+        response = requests.get(base_url)
+        response.raise_for_status()
+        data = response.json()
+        astronaut_data = data["results"]
+        astronauts_dataframe = pl.DataFrame(astronaut_data)
+        return astronauts_dataframe
     response = requests.get(base_url)
     response.raise_for_status()
     data = response.json()
