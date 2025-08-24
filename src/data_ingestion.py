@@ -12,18 +12,35 @@ logger = setup_logging()
 load_dotenv()
 
 def fetch_api_data(base_url):
-    if base_url == os.getenv("THE_SPACE_DEVS_API"):
-        response = requests.get(base_url)
-        response.raise_for_status()
-        data = response.json()
-        astronaut_data = data["results"]
-        astronauts_dataframe = pl.DataFrame(astronaut_data)
-        return astronauts_dataframe
     response = requests.get(base_url)
     response.raise_for_status()
     data = response.json()
-    api_data_dataframe = pl.DataFrame(data)
-    return api_data_dataframe
+
+    if base_url == os.getenv("THE_SPACE_DEVS_API"):
+        astronaut_data = data["results"]
+        astronaut_df = pl.DataFrame(astronaut_data)
+
+        if "agency" in astronaut_df.columns:
+            astronaut_df = astronaut_df.with_columns(
+                pl.col("agency")
+                .apply(lambda x: x if isinstance(x, dict) else None)
+                .alias("agency")
+            )
+            astronaut_df = astronaut_df.unnest("agency")
+
+        if "image" in astronaut_df.columns:
+            astronaut_df = astronaut_df.with_columns(
+                pl.col("image")
+                .apply(lambda x: x if isinstance(x, dict) else None)
+                .alias("image")
+            )
+            astronaut_df = astronaut_df.unnest("image")
+            result = astronaut_df
+
+        return result
+
+    result = pl.DataFrame(data)
+    return result
 
 
 def convert_dataframe_to_parquet(dataframe):
