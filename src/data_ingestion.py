@@ -7,9 +7,30 @@ import time
 from utils import write_data_to_minio
 from db_sync import db_sync
 from logger import setup_logging
+import isodate
 from astroquery.ipac.nexsci.nasa_exoplanet_archive import NasaExoplanetArchive
 logger = setup_logging()
 load_dotenv()
+
+def iso_to_human(iso_str):
+    dur = isodate.parse_duration(iso_str)
+    total_seconds = int(dur.total_seconds())
+    days, rem = divmod(total_seconds, 86400)
+    hours, rem = divmod(rem, 3600)
+    minutes, seconds = divmod(rem, 60)
+
+    parts = []
+    if days:
+        parts.append(f"{days} days")
+    if hours:
+        parts.append(f"{hours} hours")
+    if minutes:
+        parts.append(f"{minutes} minutes")
+    if seconds:
+        parts.append(f"{seconds} seconds")
+    result = ", ".join(parts) if parts else "0 seconds"
+    return result
+
 
 def fetch_api_data(base_url):
     response = requests.get(base_url)
@@ -19,6 +40,7 @@ def fetch_api_data(base_url):
     if base_url == os.getenv("THE_SPACE_DEVS_API"):
         astronauts_dataframe = pl.DataFrame(data["results"])
 
+        # flatten select columns
         astronauts_dataframe = astronauts_dataframe.with_columns(
             pl.struct([
                 pl.col("agency").struct.field("name").alias("agency_name"),
@@ -30,7 +52,14 @@ def fetch_api_data(base_url):
             ]).alias("image_flat"),
         ).unnest(["agency_flat", "image_flat"]).drop(["agency", "image"])
 
+        # parse ISO dates
+        astronauts_dataframe = astronauts_dataframe.with_columns(
+            pl.col("time_in_space").map_elements(iso_to_human, return_dtype=pl.Utf8),
+            pl.col("eva_time").map_elements(iso_to_human, return_dtype=pl.Utf8)
+        )
+
         result = astronauts_dataframe
+        print(result.select("time_in_space", "eva_time"))
         return result
 
     result = pl.DataFrame(data)
