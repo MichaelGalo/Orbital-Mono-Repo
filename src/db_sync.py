@@ -55,8 +55,11 @@ def db_sync():
 
     # inits db & refreshes on data updates
     update_data(con, logger, minio_bucket, "RAW")
-    update_data(con, logger, minio_bucket, "STAGED")
-    update_data(con, logger, minio_bucket, "CLEANED")
+
+    # stage tables
+    with open('SQL/staged.sql', 'r') as file:
+        staging_query = file.read()
+    con.execute(staging_query)
 
     con.close()
     logger.info("Database connection closed")

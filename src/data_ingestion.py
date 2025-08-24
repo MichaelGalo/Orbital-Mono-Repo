@@ -92,7 +92,7 @@ def query_confirmed_planets():
         logger.error(f"Query failed: {e}")
 
 
-def run_data_ingestion():
+def data_ingestion():
     tick = time.time()
 
     minio_bucket = os.getenv("MINIO_BUCKET_NAME")
