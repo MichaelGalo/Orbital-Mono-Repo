@@ -17,26 +17,20 @@ def fetch_api_data(base_url):
     data = response.json()
 
     if base_url == os.getenv("THE_SPACE_DEVS_API"):
-        astronaut_data = data["results"]
-        astronaut_df = pl.DataFrame(astronaut_data)
+        astronauts_dataframe = pl.DataFrame(data["results"])
 
-        if "agency" in astronaut_df.columns:
-            astronaut_df = astronaut_df.with_columns(
-                pl.col("agency")
-                .apply(lambda x: x if isinstance(x, dict) else None)
-                .alias("agency")
-            )
-            astronaut_df = astronaut_df.unnest("agency")
+        astronauts_dataframe = astronauts_dataframe.with_columns(
+            pl.struct([
+                pl.col("agency").struct.field("name").alias("agency_name"),
+                pl.col("agency").struct.field("abbrev").alias("agency_abbrev")
+            ]).alias("agency_flat"),
+            pl.struct([
+                pl.col("image").struct.field("image_url").alias("image_url"),
+                pl.col("image").struct.field("thumbnail_url").alias("thumbnail_url")
+            ]).alias("image_flat"),
+        ).unnest(["agency_flat", "image_flat"]).drop(["agency", "image"])
 
-        if "image" in astronaut_df.columns:
-            astronaut_df = astronaut_df.with_columns(
-                pl.col("image")
-                .apply(lambda x: x if isinstance(x, dict) else None)
-                .alias("image")
-            )
-            astronaut_df = astronaut_df.unnest("image")
-            result = astronaut_df
-
+        result = astronauts_dataframe
         return result
 
     result = pl.DataFrame(data)
