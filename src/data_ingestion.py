@@ -54,12 +54,11 @@ def fetch_api_data(base_url):
 
         # parse ISO dates
         astronauts_dataframe = astronauts_dataframe.with_columns(
-            pl.col("time_in_space").map_elements(iso_to_human, return_dtype=pl.Utf8),
-            pl.col("eva_time").map_elements(iso_to_human, return_dtype=pl.Utf8)
+            pl.col("time_in_space").map_elements(iso_to_human, return_dtype=pl.Utf8).alias("time_in_space_human_readable"),
+            pl.col("eva_time").map_elements(iso_to_human, return_dtype=pl.Utf8).alias("eva_time_human_readable")
         )
 
         result = astronauts_dataframe
-        print(result.select("time_in_space", "eva_time"))
         return result
 
     result = pl.DataFrame(data)
