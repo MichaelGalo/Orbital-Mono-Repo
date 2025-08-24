@@ -1,15 +1,15 @@
-CREATE TABLE IF NOT EXISTS
-SELECT 
+CREATE TABLE IF NOT EXISTS STAGED.ASTRONAUTS AS
+SELECT
     _record_id AS id,
-    name, 
-    agency_name,
+    name,
+    agency_name AS agency,
     agency_abbrev,
-    image,
-    time_in_space, 
-    eva_time, 
-    age, 
-    bio, 
-    wiki, 
+    image_url,
+    time_in_space,
+    eva_time,
+    age,
+    bio,
+    wiki,
     spacewalks_count,
     url,
     thumbnail_url
