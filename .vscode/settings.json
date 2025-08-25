@@ -1,0 +1,11 @@
+{
+    // Workspace settings: add words to Code Spell Checker dictionary
+    "cSpell.words": [
+        "DONKI",
+        "APOD",
+        "pscomppars",
+        "tock",
+        "dotenv",
+        "astroquery"
+    ]
+}
