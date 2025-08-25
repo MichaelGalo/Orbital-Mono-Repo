@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS STAGED.NASA_DONKI AS
 SELECT
     messageID,
     messageType,
-    messageIssueTime,
+    STRFTIME(STRPTIME(messageIssueTime, '%Y-%m-%dT%H:%MZ'), '%B %d, %Y %H:%M UTC') AS message_issue_time_human_readable,
     messageBody
 FROM RAW.NASA_DONKI;
 
@@ -43,5 +43,5 @@ SELECT
     pl_orbper AS orbital_period_days,
     pl_rade AS radius_earth_radii,
     st_rad AS star_radius_solar_radii,
-    pl_orbsmax AS orbital_semi_major_axis_in_au -- the average distance the star and planet are apart in astronomical units (how far the sun is from earth)
+    pl_orbsmax AS orbital_semi_major_axis_in_au
 FROM RAW.NASA_EXOPLANETS;
