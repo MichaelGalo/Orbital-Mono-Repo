@@ -8,6 +8,8 @@ from utils import write_data_to_minio
 from db_sync import db_sync
 from logger import setup_logging
 import isodate
+from prefect import flow, task
+from prefect.client.schemas.schedules import CronSchedule
 from astroquery.ipac.nexsci.nasa_exoplanet_archive import NasaExoplanetArchive
 logger = setup_logging()
 load_dotenv()
@@ -31,7 +33,18 @@ def iso_to_human(iso_str):
     result = ", ".join(parts) if parts else "0 seconds"
     return result
 
+def convert_dataframe_to_parquet(dataframe):
+    buffer = io.BytesIO()
+    try:
+        dataframe.write_parquet(buffer)
+        buffer.seek(0)
+        result = buffer
+        return result
+    except Exception as e:
+        logger.error(f"Failed to convert DataFrame to Parquet in-memory: {e}")
+        return None
 
+@task(name="fetching_api_data")
 def fetch_api_data(base_url):
     response = requests.get(base_url)
     response.raise_for_status()
@@ -65,18 +78,7 @@ def fetch_api_data(base_url):
     return result
 
 
-def convert_dataframe_to_parquet(dataframe):
-    buffer = io.BytesIO()
-    try:
-        dataframe.write_parquet(buffer)
-        buffer.seek(0)
-        result = buffer
-        return result
-    except Exception as e:
-        logger.error(f"Failed to convert DataFrame to Parquet in-memory: {e}")
-        return None
-
-
+@task(name="exoplanet_data_fetch")
 def query_confirmed_planets():
     try:
         tick = time.time()
@@ -91,7 +93,7 @@ def query_confirmed_planets():
     except Exception as e:
         logger.error(f"Query failed: {e}")
 
-
+@flow(name="data_ingestion_flow")
 def data_ingestion():
     tick = time.time()
 
@@ -134,3 +136,13 @@ def data_ingestion():
     db_sync()
 
     logger.info(f"Data ingestion completed in {tock:.2f} seconds.")
+
+if __name__ == "__main__":
+    data_ingestion.serve(
+        name="Data_Ingestion",
+        schedule=CronSchedule(
+            cron="0 1 * * *",
+            timezone="UTC"
+        ),
+        tags=["data_ingestion"]
+    )
