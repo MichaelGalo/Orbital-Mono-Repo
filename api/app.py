@@ -4,12 +4,26 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(parent_path)
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from src.logger import setup_logging
 from utils import get_datasets_list, fetch_single_dataset
 import datetime
 
 app = FastAPI()
 logger = setup_logging()
+
+origins = [
+    "http://localhost:3000",
+    "https://example-production-domain.com"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/", tags=["Root"])
 def root():

@@ -32,7 +32,6 @@ def fetch_single_dataset(dataset_id, offset, limit):
         limit = int(limit)
         logger.info(f"Fetching dataset {dataset_id} with offset={offset}, limit={limit}")
         
-        # Validate dataset_id
         if dataset_id not in DATASET_CONFIG:
             raise ValueError(f"Invalid dataset_id: {dataset_id}")
         
