@@ -20,6 +20,21 @@ SELECT
     *
 FROM RAW.NASA_APOD;
 
+-- CREATE TABLE IF NOT EXISTS STAGED.NASA_APOD AS
+-- SELECT
+--     _record_id as id,
+--     title,
+--     date,
+--     explanation,
+--     url,
+--     hdurl,
+--     thumbnail_url,
+--     media_type,
+--     copyright,
+--     concepts,
+--     concept_tags
+-- FROM RAW.NASA_APOD;
+
 CREATE TABLE IF NOT EXISTS STAGED.NASA_DONKI AS
 SELECT
     messageID,

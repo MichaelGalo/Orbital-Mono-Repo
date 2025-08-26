@@ -12,7 +12,7 @@ load_dotenv()
 
 logger = setup_logging()
 
-def db_sync_alt():
+def db_sync():
     total_start_time = time.time()
     logger.info("Starting Orbital database sync")
 
