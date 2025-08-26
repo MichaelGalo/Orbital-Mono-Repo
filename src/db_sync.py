@@ -12,7 +12,7 @@ load_dotenv()
 
 logger = setup_logging()
 
-def db_sync():
+def db_sync_alt():
     total_start_time = time.time()
     logger.info("Starting Orbital database sync")
 
@@ -23,9 +23,8 @@ def db_sync():
     duckdb.load_extension("httpfs")
     logger.info("DuckDB extensions loaded successfully")
 
-    db_path = os.path.join(parent_path, "orbital.db")
-    con = duckdb.connect(db_path)
-    logger.info(f"Connected to persistent DuckDB database: {db_path}")
+    con = duckdb.connect(':memory:')
+    logger.info(f"Connected to in-memory DuckDB database")
 
     data_path = os.path.join(parent_path, "data")
     catalog_path = os.path.join(parent_path, "catalog.ducklake")

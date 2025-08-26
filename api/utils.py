@@ -39,10 +39,8 @@ def fetch_single_dataset(dataset_id, offset, limit):
         logger.info(f"Using dataset: {dataset['table_name']}")
         
         duckdb.install_extension("ducklake")
-        db_path = os.path.join(parent_path, "orbital.db")
-
-        con = duckdb.connect(db_path)
-        logger.info(f"Connected to persistent DuckDB database: {db_path}")
+        con = duckdb.connect(':memory:')
+        logger.info(f"Connected to in-memory DuckDB database")
 
         data_path = os.path.join(parent_path, "data")
         catalog_path = os.path.join(parent_path, "catalog.ducklake")
