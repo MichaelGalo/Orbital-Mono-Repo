@@ -1,80 +1,30 @@
 import os
 import requests
 from dotenv import load_dotenv
-import io
 import polars as pl
 import time
-from utils import write_data_to_minio
+from utils import write_data_to_minio, process_astronaut_data, convert_dataframe_to_parquet
 from db_sync import db_sync
 from logger import setup_logging
-import isodate
 from prefect import flow, task
 from prefect.client.schemas.schedules import CronSchedule
 from astroquery.ipac.nexsci.nasa_exoplanet_archive import NasaExoplanetArchive
 logger = setup_logging()
 load_dotenv()
 
-def iso_to_human(iso_str):
-    dur = isodate.parse_duration(iso_str)
-    total_seconds = int(dur.total_seconds())
-    days, rem = divmod(total_seconds, 86400)
-    hours, rem = divmod(rem, 3600)
-    minutes, seconds = divmod(rem, 60)
-
-    parts = []
-    if days:
-        parts.append(f"{days} days")
-    if hours:
-        parts.append(f"{hours} hours")
-    if minutes:
-        parts.append(f"{minutes} minutes")
-    if seconds:
-        parts.append(f"{seconds} seconds")
-    result = ", ".join(parts) if parts else "0 seconds"
-    return result
-
-def convert_dataframe_to_parquet(dataframe):
-    buffer = io.BytesIO()
-    try:
-        dataframe.write_parquet(buffer)
-        buffer.seek(0)
-        result = buffer
-        return result
-    except Exception as e:
-        logger.error(f"Failed to convert DataFrame to Parquet in-memory: {e}")
-        return None
-
 @task(name="fetching_api_data")
 def fetch_api_data(base_url):
-    response = requests.get(base_url)
-    response.raise_for_status()
-    data = response.json()
-
-    if base_url == os.getenv("THE_SPACE_DEVS_API"):
-        astronauts_dataframe = pl.DataFrame(data["results"])
-
-        # flatten select columns
-        astronauts_dataframe = astronauts_dataframe.with_columns(
-            pl.struct([
-                pl.col("agency").struct.field("name").alias("agency_name"),
-                pl.col("agency").struct.field("abbrev").alias("agency_abbrev")
-            ]).alias("agency_flat"),
-            pl.struct([
-                pl.col("image").struct.field("image_url").alias("image_url"),
-                pl.col("image").struct.field("thumbnail_url").alias("thumbnail_url")
-            ]).alias("image_flat"),
-        ).unnest(["agency_flat", "image_flat"]).drop(["agency", "image"])
-
-        # parse ISO dates
-        astronauts_dataframe = astronauts_dataframe.with_columns(
-            pl.col("time_in_space").map_elements(iso_to_human, return_dtype=pl.Utf8).alias("time_in_space_human_readable"),
-            pl.col("eva_time").map_elements(iso_to_human, return_dtype=pl.Utf8).alias("eva_time_human_readable")
-        )
-
-        result = astronauts_dataframe
+    if base_url != os.getenv("THE_SPACE_DEVS_API"):
+        response = requests.get(base_url)
+        response.raise_for_status()
+        data = response.json()
+        result = pl.DataFrame(data)
         return result
 
-    result = pl.DataFrame(data)
+    astronauts_dataframe = pl.DataFrame(data["results"])
+    processed_astronaut_dataframe = process_astronaut_data(astronauts_dataframe)
+
+    result = processed_astronaut_dataframe
     return result
 
 
@@ -83,11 +33,12 @@ def query_confirmed_planets():
     try:
         tick = time.time()
         logger.info("Querying confirmed exoplanets from NASA Exoplanet Archive")
-        all_planets = NasaExoplanetArchive.query_criteria(table="pscomppars", select="*")
+        target_table = "pscomppars"
+        all_planets = NasaExoplanetArchive.query_criteria(table=target_table, select="*")
         tock = time.time()
         logger.info(f"Query completed in {tock - tick:.2f} seconds")
-        pandas_df = all_planets.to_pandas()
-        exoplanets_dataframe = pl.from_pandas(pandas_df)
+        planets_df = all_planets.to_pandas()
+        exoplanets_dataframe = pl.from_pandas(planets_df)
         exoplanets_parquet_buffer = convert_dataframe_to_parquet(exoplanets_dataframe)
         return exoplanets_parquet_buffer
     except Exception as e:
