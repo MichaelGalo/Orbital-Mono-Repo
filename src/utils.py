@@ -25,7 +25,7 @@ def update_data(con, logger, bucket_name, folder_path):
             logger.info(f"Processing file: {file_path} -> table: {folder_path}.{table_name}")
 
             query = f"""
-            CREATE TABLE IF NOT EXISTS {folder_path}.{table_name} AS
+            CREATE OR REPLACE TABLE {folder_path}.{table_name} AS
             SELECT 
                 *,
                 '{file_name}' AS _source_file,

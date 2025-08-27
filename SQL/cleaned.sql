@@ -20,19 +20,6 @@ SELECT
     *
 FROM STAGED.NASA_APOD;
 
--- FIXME:
--- CREATE TABLE IF NOT EXISTS CLEANED.NASA_APOD AS
--- SELECT
---     title,
---     date,
---     explanation
---     url,
---     hdurl,
---     thumbnail_url,
---     media_type,
---     copyright
--- FROM STAGED.NASA_APOD;
-
 CREATE TABLE IF NOT EXISTS CLEANED.NASA_DONKI AS
 SELECT
     messageID AS message_id,
