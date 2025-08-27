@@ -3,7 +3,7 @@ import os
 import sys
 import time
 import duckdb
-from utils import update_data, execute_SQL_file
+from utils import update_data
 from dotenv import load_dotenv
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
@@ -11,6 +11,16 @@ sys.path.append(parent_path)
 load_dotenv()
 
 logger = setup_logging()
+
+def execute_SQL_file(con, file_path):
+    full_path = os.path.join(parent_path, file_path)
+    if not os.path.exists(full_path):
+        logger.error(f"SQL file not found: {full_path}")
+        raise FileNotFoundError(full_path)
+
+    with open(full_path, 'r') as file:
+        sql = file.read()
+    con.execute(sql)
 
 def db_sync():
     total_start_time = time.time()
@@ -29,13 +39,6 @@ def db_sync():
     data_path = os.path.join(parent_path, "data")
     internal_data = os.path.join(data_path + "/")
     catalog_path = os.path.join(parent_path, "catalog.ducklake")
-
-    #FIXME: Use os to drop `catalog.ducklake` for hack APOD refresh
-    if os.path.exists(catalog_path):
-        os.remove(catalog_path)
-        logger.info(f"File '{catalog_path}' deleted successfully.")
-    else:
-        logger.error(f"File '{catalog_path}' not found. Possibly not initialized for the first time, yet.")
 
     logger.info(f"Attaching DuckLake with data path: {data_path}")
     con.execute(f"ATTACH 'ducklake:{catalog_path}' AS my_ducklake (DATA_PATH '{data_path}')")
@@ -63,6 +66,10 @@ def db_sync():
     # inits db & refreshes on data updates
     update_data(con, logger, minio_bucket, "RAW")
 
+    # clean up old files (no timeline)
+    con.execute("CALL ducklake_expire_snapshots('my_ducklake', older_than => now())")
+    con.execute("CALL ducklake_cleanup_old_files('my_ducklake', cleanup_all => true)")
+
     staged_queries = [
         'SQL/STAGED_ASTRONAUTS.sql',
         'SQL/STAGED_NASA_APOD.sql',
@@ -77,19 +84,19 @@ def db_sync():
         'SQL/CLEANED_NASA_EXOPLANETS.sql'
     ]
 
-    for query in staged_queries:
+    for file in staged_queries:
         try:
-            logger.info(f"Executing staged query from file: {query}")
-            execute_SQL_file(con, query)
+            logger.info(f"Executing staged query from file: {file}")
+            execute_SQL_file(con, file)
         except Exception as e:
-            logger.error(f"Error executing staged query from file {query}: {e}")
+            logger.error(f"Error executing staged query from file {file}: {e}")
 
-    for query in cleaned_queries:
+    for file in cleaned_queries:
         try:
-            logger.info(f"Executing cleaned query from file: {query}")
-            execute_SQL_file(con, query)
+            logger.info(f"Executing cleaned query from file: {file}")
+            execute_SQL_file(con, file)
         except Exception as e:
-            logger.error(f"Error executing cleaned query from file {query}: {e}")
+            logger.error(f"Error executing cleaned query from file {file}: {e}")
 
     con.close()
     logger.info("Database connection closed")
