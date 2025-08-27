@@ -3,6 +3,7 @@ import os
 import io
 import isodate
 import duckdb
+import polars as pl
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(parent_path)
@@ -155,3 +156,24 @@ def convert_dataframe_to_parquet(dataframe):
     except Exception as e:
         logger.error(f"Failed to convert DataFrame to Parquet in-memory: {e}")
         return None
+    
+def process_astronaut_data(astronauts_dataframe):
+        # flatten select columns 
+    astronauts_dataframe = astronauts_dataframe.with_columns(
+        pl.struct([
+            pl.col("agency").struct.field("name").alias("agency_name"),
+            pl.col("agency").struct.field("abbrev").alias("agency_abbrev")
+        ]).alias("agency_flat"),
+        pl.struct([
+            pl.col("image").struct.field("image_url").alias("image_url"),
+            pl.col("image").struct.field("thumbnail_url").alias("thumbnail_url")
+        ]).alias("image_flat"),
+    ).unnest(["agency_flat", "image_flat"]).drop(["agency", "image"])
+
+    # parse ISO dates
+    astronauts_dataframe = astronauts_dataframe.with_columns(
+        pl.col("time_in_space").map_elements(iso_to_human, return_dtype=pl.Utf8).alias("time_in_space_human_readable"),
+        pl.col("eva_time").map_elements(iso_to_human, return_dtype=pl.Utf8).alias("eva_time_human_readable")
+    )
+    result = astronauts_dataframe
+    return result

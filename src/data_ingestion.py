@@ -1,10 +1,9 @@
 import os
 import requests
 from dotenv import load_dotenv
-import io
 import polars as pl
 import time
-from utils import write_data_to_minio, iso_to_human, convert_dataframe_to_parquet
+from utils import write_data_to_minio, process_astronaut_data, convert_dataframe_to_parquet
 from db_sync import db_sync
 from logger import setup_logging
 from prefect import flow, task
@@ -13,40 +12,19 @@ from astroquery.ipac.nexsci.nasa_exoplanet_archive import NasaExoplanetArchive
 logger = setup_logging()
 load_dotenv()
 
-
 @task(name="fetching_api_data")
 def fetch_api_data(base_url):
-    #TODO: invert conditional so that smaller section appears all at the top
-    response = requests.get(base_url)
-    response.raise_for_status()
-    data = response.json()
-
-    if base_url == os.getenv("THE_SPACE_DEVS_API"):
-        astronauts_dataframe = pl.DataFrame(data["results"])
-
-        # TODO: create a function for this
-        # flatten select columns 
-        astronauts_dataframe = astronauts_dataframe.with_columns(
-            pl.struct([
-                pl.col("agency").struct.field("name").alias("agency_name"),
-                pl.col("agency").struct.field("abbrev").alias("agency_abbrev")
-            ]).alias("agency_flat"),
-            pl.struct([
-                pl.col("image").struct.field("image_url").alias("image_url"),
-                pl.col("image").struct.field("thumbnail_url").alias("thumbnail_url")
-            ]).alias("image_flat"),
-        ).unnest(["agency_flat", "image_flat"]).drop(["agency", "image"])
-
-        # parse ISO dates
-        astronauts_dataframe = astronauts_dataframe.with_columns(
-            pl.col("time_in_space").map_elements(iso_to_human, return_dtype=pl.Utf8).alias("time_in_space_human_readable"),
-            pl.col("eva_time").map_elements(iso_to_human, return_dtype=pl.Utf8).alias("eva_time_human_readable")
-        )
-
-        result = astronauts_dataframe
+    if base_url != os.getenv("THE_SPACE_DEVS_API"):
+        response = requests.get(base_url)
+        response.raise_for_status()
+        data = response.json()
+        result = pl.DataFrame(data)
         return result
 
-    result = pl.DataFrame(data)
+    astronauts_dataframe = pl.DataFrame(data["results"])
+    processed_astronaut_dataframe = process_astronaut_data(astronauts_dataframe)
+
+    result = processed_astronaut_dataframe
     return result
 
 
@@ -55,7 +33,8 @@ def query_confirmed_planets():
     try:
         tick = time.time()
         logger.info("Querying confirmed exoplanets from NASA Exoplanet Archive")
-        all_planets = NasaExoplanetArchive.query_criteria(table="pscomppars", select="*") #TODO: table name into a variable
+        target_table = "pscomppars"
+        all_planets = NasaExoplanetArchive.query_criteria(table=target_table, select="*")
         tock = time.time()
         logger.info(f"Query completed in {tock - tick:.2f} seconds")
         planets_df = all_planets.to_pandas()
