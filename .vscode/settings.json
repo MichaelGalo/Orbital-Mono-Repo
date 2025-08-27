@@ -6,6 +6,9 @@
         "pscomppars",
         "tock",
         "dotenv",
-        "astroquery"
+        "astroquery",
+        "ipac",
+        "ducklake",
+        "httpfs"
     ]
 }

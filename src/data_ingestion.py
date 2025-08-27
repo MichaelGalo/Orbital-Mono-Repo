@@ -4,48 +4,19 @@ from dotenv import load_dotenv
 import io
 import polars as pl
 import time
-from utils import write_data_to_minio
+from utils import write_data_to_minio, iso_to_human, convert_dataframe_to_parquet
 from db_sync import db_sync
 from logger import setup_logging
-import isodate
 from prefect import flow, task
 from prefect.client.schemas.schedules import CronSchedule
 from astroquery.ipac.nexsci.nasa_exoplanet_archive import NasaExoplanetArchive
 logger = setup_logging()
 load_dotenv()
 
-def iso_to_human(iso_str):
-    dur = isodate.parse_duration(iso_str)
-    total_seconds = int(dur.total_seconds())
-    days, rem = divmod(total_seconds, 86400)
-    hours, rem = divmod(rem, 3600)
-    minutes, seconds = divmod(rem, 60)
-
-    parts = []
-    if days:
-        parts.append(f"{days} days")
-    if hours:
-        parts.append(f"{hours} hours")
-    if minutes:
-        parts.append(f"{minutes} minutes")
-    if seconds:
-        parts.append(f"{seconds} seconds")
-    result = ", ".join(parts) if parts else "0 seconds"
-    return result
-
-def convert_dataframe_to_parquet(dataframe):
-    buffer = io.BytesIO()
-    try:
-        dataframe.write_parquet(buffer)
-        buffer.seek(0)
-        result = buffer
-        return result
-    except Exception as e:
-        logger.error(f"Failed to convert DataFrame to Parquet in-memory: {e}")
-        return None
 
 @task(name="fetching_api_data")
 def fetch_api_data(base_url):
+    #TODO: invert conditional so that smaller section appears all at the top
     response = requests.get(base_url)
     response.raise_for_status()
     data = response.json()
@@ -53,7 +24,8 @@ def fetch_api_data(base_url):
     if base_url == os.getenv("THE_SPACE_DEVS_API"):
         astronauts_dataframe = pl.DataFrame(data["results"])
 
-        # flatten select columns
+        # TODO: create a function for this
+        # flatten select columns 
         astronauts_dataframe = astronauts_dataframe.with_columns(
             pl.struct([
                 pl.col("agency").struct.field("name").alias("agency_name"),
@@ -83,11 +55,11 @@ def query_confirmed_planets():
     try:
         tick = time.time()
         logger.info("Querying confirmed exoplanets from NASA Exoplanet Archive")
-        all_planets = NasaExoplanetArchive.query_criteria(table="pscomppars", select="*")
+        all_planets = NasaExoplanetArchive.query_criteria(table="pscomppars", select="*") #TODO: table name into a variable
         tock = time.time()
         logger.info(f"Query completed in {tock - tick:.2f} seconds")
-        pandas_df = all_planets.to_pandas()
-        exoplanets_dataframe = pl.from_pandas(pandas_df)
+        planets_df = all_planets.to_pandas()
+        exoplanets_dataframe = pl.from_pandas(planets_df)
         exoplanets_parquet_buffer = convert_dataframe_to_parquet(exoplanets_dataframe)
         return exoplanets_parquet_buffer
     except Exception as e:
