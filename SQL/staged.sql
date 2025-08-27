@@ -20,6 +20,7 @@ SELECT
     *
 FROM RAW.NASA_APOD;
 
+--FIXME:
 -- CREATE TABLE IF NOT EXISTS STAGED.NASA_APOD AS
 -- SELECT
 --     _record_id as id,

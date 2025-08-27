@@ -6,7 +6,7 @@ sys.path.append(parent_path)
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from src.logger import setup_logging
-from utils import get_datasets_list, fetch_single_dataset
+from api.utils import get_datasets_list, fetch_single_dataset
 import datetime
 
 app = FastAPI()
@@ -54,7 +54,7 @@ def read_datasets_list():
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @app.get("/datasets/{dataset_id}", tags=["Datasets"])
-def read_dataset(
+async def read_dataset(
     dataset_id: int,
     offset: int = Query(0, ge=0, description="Pagination offset (default: 0)"),
     limit: int = Query(1000, ge=1, le=7500, description="Pagination limit (default: 1000, max: 7500)")
