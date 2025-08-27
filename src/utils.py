@@ -25,7 +25,7 @@ def update_data(con, logger, bucket_name, folder_path):
             logger.info(f"Processing file: {file_path} -> table: {folder_path}.{table_name}")
 
             query = f"""
-            CREATE TABLE IF NOT EXISTS {folder_path}.{table_name} AS
+            CREATE OR REPLACE TABLE {folder_path}.{table_name} AS
             SELECT 
                 *,
                 '{file_name}' AS _source_file,
@@ -70,3 +70,9 @@ def write_data_to_minio(parquet_buffer, bucket_name, object_name, folder_name=No
         logger.info(f"Successfully wrote {full_object_name} to bucket {bucket_name}")
     except Exception as e:
         logger.error(f"Failed to write data to MinIO: {e}")
+
+
+def execute_SQL_file(con, file_path):
+    with open(file_path, 'r') as file:
+        query = file.read()
+    con.execute(query)

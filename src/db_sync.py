@@ -3,7 +3,7 @@ import os
 import sys
 import time
 import duckdb
-from utils import update_data
+from utils import update_data, execute_SQL_file
 from dotenv import load_dotenv
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
@@ -23,12 +23,19 @@ def db_sync():
     duckdb.load_extension("httpfs")
     logger.info("DuckDB extensions loaded successfully")
 
-    db_path = os.path.join(parent_path, "orbital.db")
-    con = duckdb.connect(db_path)
-    logger.info(f"Connected to persistent DuckDB database: {db_path}")
+    con = duckdb.connect(':memory:')
+    logger.info(f"Connected to in-memory DuckDB database")
 
     data_path = os.path.join(parent_path, "data")
+    internal_data = os.path.join(data_path + "/")
     catalog_path = os.path.join(parent_path, "catalog.ducklake")
+
+    #FIXME: Use os to drop `catalog.ducklake` for hack APOD refresh
+    if os.path.exists(catalog_path):
+        os.remove(catalog_path)
+        logger.info(f"File '{catalog_path}' deleted successfully.")
+    else:
+        logger.error(f"File '{catalog_path}' not found. Possibly not initialized for the first time, yet.")
 
     logger.info(f"Attaching DuckLake with data path: {data_path}")
     con.execute(f"ATTACH 'ducklake:{catalog_path}' AS my_ducklake (DATA_PATH '{data_path}')")
@@ -56,13 +63,33 @@ def db_sync():
     # inits db & refreshes on data updates
     update_data(con, logger, minio_bucket, "RAW")
 
-    with open('SQL/staged.sql', 'r') as file:
-        staging_query = file.read()
-    con.execute(staging_query)
+    staged_queries = [
+        'SQL/STAGED_ASTRONAUTS.sql',
+        'SQL/STAGED_NASA_APOD.sql',
+        'SQL/STAGED_NASA_DONKI.sql',
+        'SQL/STAGED_NASA_EXOPLANETS.sql'
+    ]
 
-    with open('SQL/cleaned.sql', 'r') as file:
-        cleaning_query = file.read()
-    con.execute(cleaning_query)
+    cleaned_queries = [
+        'SQL/CLEANED_ASTRONAUTS.sql',
+        'SQL/CLEANED_NASA_APOD.sql',
+        'SQL/CLEANED_NASA_DONKI.sql',
+        'SQL/CLEANED_NASA_EXOPLANETS.sql'
+    ]
+
+    for query in staged_queries:
+        try:
+            logger.info(f"Executing staged query from file: {query}")
+            execute_SQL_file(con, query)
+        except Exception as e:
+            logger.error(f"Error executing staged query from file {query}: {e}")
+
+    for query in cleaned_queries:
+        try:
+            logger.info(f"Executing cleaned query from file: {query}")
+            execute_SQL_file(con, query)
+        except Exception as e:
+            logger.error(f"Error executing cleaned query from file {query}: {e}")
 
     con.close()
     logger.info("Database connection closed")
