@@ -70,3 +70,9 @@ def write_data_to_minio(parquet_buffer, bucket_name, object_name, folder_name=No
         logger.info(f"Successfully wrote {full_object_name} to bucket {bucket_name}")
     except Exception as e:
         logger.error(f"Failed to write data to MinIO: {e}")
+
+
+def execute_SQL_file(con, file_path):
+    with open(file_path, 'r') as file:
+        query = file.read()
+    con.execute(query)
