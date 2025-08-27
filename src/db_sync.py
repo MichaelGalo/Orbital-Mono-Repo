@@ -40,13 +40,6 @@ def db_sync():
     internal_data = os.path.join(data_path + "/")
     catalog_path = os.path.join(parent_path, "catalog.ducklake")
 
-    #FIXME: Use os to drop `catalog.ducklake` for hack APOD refresh
-    # if os.path.exists(catalog_path):
-    #     os.remove(catalog_path)
-    #     logger.info(f"File '{catalog_path}' deleted successfully.")
-    # else:
-    #     logger.error(f"File '{catalog_path}' not found. Possibly not initialized for the first time, yet.")
-
     logger.info(f"Attaching DuckLake with data path: {data_path}")
     con.execute(f"ATTACH 'ducklake:{catalog_path}' AS my_ducklake (DATA_PATH '{data_path}')")
     con.execute("USE my_ducklake")
