@@ -3,7 +3,7 @@ import os
 import sys
 import time
 from utils import duckdb_con_init, ducklake_init, ducklake_attach_minio, ducklake_refresh, schema_creation, execute_SQL_file, update_data
-from data_quality import run_data_quality_checks
+from data_quality import passed_data_quality_checks
 from dotenv import load_dotenv
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
@@ -43,7 +43,7 @@ def db_sync():
     execute_SQL_file(con, staged_queries)
 
     if data_path + "/STAGED":
-        if run_data_quality_checks() == True:
+        if passed_data_quality_checks() == True:
             execute_SQL_file(con, cleaned_queries)
         else:
             logger.warning("Data quality checks failed. Continuing to use most recent successful data.")

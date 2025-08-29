@@ -1,10 +1,10 @@
 SELECT
-    messageID,
-    messageType,
-    STRFTIME(STRPTIME(messageIssueTime, '%Y-%m-%dT%H:%MZ'), '%B %d, %Y %H:%M UTC') AS message_issue_time_human_readable,
-    messageBody
-FROM RAW.NASA_DONKI
-WHERE messageID IS NULL
-    AND messageType IS NULL
-    AND messageIssueTime IS NULL
-    AND messageBody IS NULL;
+    message_id,
+    message_type,
+    message_issue_time_human_readable,
+    message_body
+FROM STAGED.NASA_DONKI
+WHERE message_id IS NULL
+    AND message_type IS NULL
+    AND message_issue_time_human_readable IS NULL
+    AND message_body IS NULL;

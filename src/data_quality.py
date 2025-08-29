@@ -8,7 +8,7 @@ from utils import duckdb_con_init, ducklake_init, ducklake_attach_minio
 
 logger = setup_logging()
 
-def run_data_quality_checks():
+def passed_data_quality_checks():
     logger.info("Starting Data Quality Checks")
     data_path = os.path.join(parent_path, "data")
     catalog_path = os.path.join(parent_path, "catalog.ducklake")
@@ -18,7 +18,7 @@ def run_data_quality_checks():
     ducklake_attach_minio(con)
 
     data_quality_queries = [
-        "SQL/QUALITY_ASTRONAUTS.sql"
+        "SQL/QUALITY_ASTRONAUTS.sql",
         "SQL/QUALITY_NASA_APOD.sql",
         "SQL/QUALITY_NASA_EXOPLANETS.sql",
         "SQL/QUALITY_NASA_DONKI.sql"
@@ -47,7 +47,6 @@ def run_data_quality_checks():
         except Exception as e:
             logger.error(f"Error executing {rel_path}: {e}")
             con.close()
-            raise
 
     try:
         con.close()

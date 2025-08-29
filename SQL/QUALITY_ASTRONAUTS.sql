@@ -1,11 +1,11 @@
 SELECT
-    _record_id AS id,
+    id,
     name,
-    agency_name AS agency,
+    agency,
     agency_abbrev,
     image_url,
-    time_in_space_human_readable AS time_in_space,
-    eva_time_human_readable AS eva_time,
+    time_in_space,
+    eva_time,
     age,
     bio,
     wiki,
@@ -13,4 +13,4 @@ SELECT
     url,
     thumbnail_url
 FROM STAGED.ASTRONAUTS
-WHERE name IS NULL AND agency_name IS NULL;
+WHERE name IS NULL AND agency IS NULL;
