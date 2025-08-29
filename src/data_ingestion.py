@@ -14,10 +14,11 @@ load_dotenv()
 
 @task(name="fetching_api_data")
 def fetch_api_data(base_url):
+    response = requests.get(base_url)
+    response.raise_for_status()
+    data = response.json()
+
     if base_url != os.getenv("THE_SPACE_DEVS_API"):
-        response = requests.get(base_url)
-        response.raise_for_status()
-        data = response.json()
         result = pl.DataFrame(data)
         return result
 
@@ -44,10 +45,21 @@ def query_confirmed_planets():
     except Exception as e:
         logger.error(f"Query failed: {e}")
 
+def ingest_exoplanets_data(output_file_name, minio_bucket):
+    exoplanets_parquet_buffer = query_confirmed_planets()
+    logger.info("Writing Exoplanets Data to MinIO Storage")
+    write_data_to_minio(exoplanets_parquet_buffer, minio_bucket, output_file_name, "RAW")
+
+def ingest_and_store_api_data(API_url, output_file_name, minio_bucket):
+    logger.info(f"Fetching Data from API: {API_url}")
+    api_dataframe = fetch_api_data(API_url)
+    api_parquet_buffer = convert_dataframe_to_parquet(api_dataframe)
+    logger.info("Writing API Data to MinIO Storage")
+    write_data_to_minio(api_parquet_buffer, minio_bucket, output_file_name, "RAW")
+
 @flow(name="data_ingestion_flow")
 def data_ingestion():
     tick = time.time()
-
     minio_bucket = os.getenv("MINIO_BUCKET_NAME")
 
     nasa_donki_url = f"{os.getenv('NASA_DONKI_API')}{os.getenv('NASA_API_KEY')}"
@@ -59,34 +71,16 @@ def data_ingestion():
     nasa_exoplanets_filename = "nasa_exoplanets.parquet"
     astronaut_filename = "astronauts.parquet"
 
-    exoplanets_parquet_buffer = query_confirmed_planets()
-    logger.info("Writing Exoplanets Data to MinIO Storage")
-    write_data_to_minio(exoplanets_parquet_buffer, minio_bucket, nasa_exoplanets_filename, "RAW")
-
-    logger.info("Fetching NASA DONKI Data from API")
-    nasa_donki_dataframe = fetch_api_data(nasa_donki_url)
-    nasa_donki_parquet_buffer = convert_dataframe_to_parquet(nasa_donki_dataframe)
-    logger.info("Writing NASA DONKI Data to MinIO Storage")
-    write_data_to_minio(nasa_donki_parquet_buffer, minio_bucket, nasa_donki_filename, "RAW")
-
-    logger.info("Fetching NASA APOD Data from API")
-    nasa_apod_dataframe = fetch_api_data(nasa_apod_url)
-    nasa_apod_parquet_buffer = convert_dataframe_to_parquet(nasa_apod_dataframe)
-    logger.info("Writing NASA APOD Data to MinIO Storage")
-    write_data_to_minio(nasa_apod_parquet_buffer, minio_bucket, nasa_apod_filename, "RAW")
-
-    logger.info("Fetching Astronaut Data from LL2 API")
-    astronaut_dataframe = fetch_api_data(astronaut_url)
-    astronaut_parquet_buffer = convert_dataframe_to_parquet(astronaut_dataframe)
-    logger.info("Writing Astronaut Data to MinIO Storage")
-    write_data_to_minio(astronaut_parquet_buffer, minio_bucket, astronaut_filename, "RAW")
+    ingest_exoplanets_data(nasa_exoplanets_filename, minio_bucket)
+    ingest_and_store_api_data(nasa_donki_url, nasa_donki_filename, minio_bucket)
+    ingest_and_store_api_data(nasa_apod_url, nasa_apod_filename, minio_bucket)
+    ingest_and_store_api_data(astronaut_url, astronaut_filename, minio_bucket)
 
     tock = time.time() - tick
+    logger.info(f"Data ingestion completed in {tock:.2f} seconds.")
 
     logger.info("Synchronizing Data to Database")
-    db_sync()
-
-    logger.info(f"Data ingestion completed in {tock:.2f} seconds.")
+    db_sync()    
 
 if __name__ == "__main__":
     data_ingestion.serve(
