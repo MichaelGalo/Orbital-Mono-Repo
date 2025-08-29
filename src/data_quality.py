@@ -19,9 +19,9 @@ def run_data_quality_checks():
 
     data_quality_queries = [
         "SQL/QUALITY_ASTRONAUTS.sql"
-        # "SQL/QUALITY_NASA_APOD.sql",
-        # "SQL/QUALITY_NASA_EXOPLANETS.sql",
-        # "SQL/QUALITY_NASA_DONKI.sql"
+        "SQL/QUALITY_NASA_APOD.sql",
+        "SQL/QUALITY_NASA_EXOPLANETS.sql",
+        "SQL/QUALITY_NASA_DONKI.sql"
     ]
 
     all_pass = True

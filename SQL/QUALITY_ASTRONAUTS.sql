@@ -12,5 +12,5 @@ SELECT
     spacewalks_count,
     url,
     thumbnail_url
-FROM RAW.ASTRONAUTS
+FROM STAGED.ASTRONAUTS
 WHERE name IS NULL AND agency_name IS NULL;

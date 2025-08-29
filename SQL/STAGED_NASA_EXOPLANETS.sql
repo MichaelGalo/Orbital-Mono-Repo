@@ -10,4 +10,5 @@ SELECT
     pl_rade AS radius_earth_radii,
     st_rad AS star_radius_solar_radii,
     pl_orbsmax AS orbital_semi_major_axis_in_au
-FROM RAW.NASA_EXOPLANETS;
+FROM RAW.NASA_EXOPLANETS
+WHERE pl_name IS NOT NULL;

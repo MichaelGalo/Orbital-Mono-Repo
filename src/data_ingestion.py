@@ -51,7 +51,7 @@ def ingest_exoplanets_data(output_file_name, minio_bucket):
     write_data_to_minio(exoplanets_parquet_buffer, minio_bucket, output_file_name, "RAW")
 
 def ingest_and_store_api_data(API_url, output_file_name, minio_bucket):
-    logger.info(f"Fetching Data from API: {API_url}")
+    logger.info(f"Fetching Data from API")
     api_dataframe = fetch_api_data(API_url)
     api_parquet_buffer = convert_dataframe_to_parquet(api_dataframe)
     logger.info("Writing API Data to MinIO Storage")

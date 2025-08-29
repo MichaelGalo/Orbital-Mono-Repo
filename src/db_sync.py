@@ -23,14 +23,8 @@ def db_sync():
     ducklake_init(con, data_path, catalog_path)
     ducklake_attach_minio(con)
     schema_creation(con)
-    if data_path + "/RAW":
-        if run_data_quality_checks() == True:
-            logger.info("Writing New Data to Ducklake Catalog in RAW-tier")
-            update_data(con, logger, minio_bucket, "RAW")
-            ducklake_refresh(con)
-        else:
-            logger.warning("Data quality checks failed. Continuing to use most recent successful data.")
-            pass
+    update_data(con, logger, minio_bucket, "RAW")
+    ducklake_refresh(con)
 
     staged_queries = [
         'SQL/STAGED_ASTRONAUTS.sql',
@@ -47,8 +41,14 @@ def db_sync():
     ]
 
     execute_SQL_file(con, staged_queries)
-    execute_SQL_file(con, cleaned_queries)
 
+    if data_path + "/STAGED":
+        if run_data_quality_checks() == True:
+            execute_SQL_file(con, cleaned_queries)
+        else:
+            logger.warning("Data quality checks failed. Continuing to use most recent successful data.")
+            pass
+    
     con.close()
     logger.info("Database connection closed")
 
