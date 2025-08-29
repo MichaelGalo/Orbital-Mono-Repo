@@ -19,9 +19,14 @@ def execute_SQL_file(con, list_of_file_paths):
             logger.error(f"SQL file not found: {full_path}")
             raise FileNotFoundError(full_path)
 
-    with open(full_path, 'r') as file:
-        sql = file.read()
-    con.execute(sql)
+        logger.info(f"Executing SQL file: {full_path}")
+        with open(full_path, 'r') as file:
+            sql = file.read()
+        try:
+            con.execute(sql)
+        except Exception as e:
+            logger.error(f"Failed executing {full_path}: {e}")
+            raise
 
 def duckdb_con_init():
     logger.info("Installing and loading DuckDB extensions")
