@@ -3,7 +3,7 @@ import requests
 from dotenv import load_dotenv
 import polars as pl
 import time
-from utils import write_data_to_minio, process_astronaut_data, convert_dataframe_to_parquet
+from utils import write_data_to_minio, process_astronaut_data, convert_dataframe_to_parquet, update_data
 from db_sync import db_sync
 from logger import setup_logging
 from prefect import flow, task

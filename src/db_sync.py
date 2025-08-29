@@ -3,6 +3,7 @@ import os
 import sys
 import time
 from utils import duckdb_con_init, ducklake_init, ducklake_attach_minio, ducklake_refresh, schema_creation, execute_SQL_file, update_data
+from data_quality import run_data_quality_checks
 from dotenv import load_dotenv
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
@@ -22,8 +23,14 @@ def db_sync():
     ducklake_init(con, data_path, catalog_path)
     ducklake_attach_minio(con)
     schema_creation(con)
-    update_data(con, logger, minio_bucket, "RAW")
-    ducklake_refresh(con)
+    if data_path + "/RAW":
+        if run_data_quality_checks() == True:
+            logger.info("Writing New Data to Ducklake Catalog in RAW-tier")
+            update_data(con, logger, minio_bucket, "RAW")
+            ducklake_refresh(con)
+        else:
+            logger.warning("Data quality checks failed. Continuing to use most recent successful data.")
+            pass
 
     staged_queries = [
         'SQL/STAGED_ASTRONAUTS.sql',

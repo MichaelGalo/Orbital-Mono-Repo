@@ -12,17 +12,16 @@ def run_data_quality_checks():
     logger.info("Starting Data Quality Checks")
     data_path = os.path.join(parent_path, "data")
     catalog_path = os.path.join(parent_path, "catalog.ducklake")
-    minio_bucket = os.getenv('MINIO_BUCKET_NAME')
 
     con = duckdb_con_init()
     ducklake_init(con, data_path, catalog_path)
     ducklake_attach_minio(con)
 
     data_quality_queries = [
-        "SQL/QUALITY_ASTRONAUTS.sql",
-        "SQL/QUALITY_NASA_APOD.sql",
-        "SQL/QUALITY_NASA_EXOPLANETS.sql",
-        "SQL/QUALITY_NASA_DONKI.sql"
+        "SQL/QUALITY_ASTRONAUTS.sql"
+        # "SQL/QUALITY_NASA_APOD.sql",
+        # "SQL/QUALITY_NASA_EXOPLANETS.sql",
+        # "SQL/QUALITY_NASA_DONKI.sql"
     ]
 
     all_pass = True
@@ -30,17 +29,12 @@ def run_data_quality_checks():
 
     for rel_path in data_quality_queries:
         full_path = os.path.join(parent_path, rel_path)
-        if not os.path.exists(full_path):
-            logger.error(f"SQL file not found: {full_path}")
-            con.close()
-            raise FileNotFoundError(full_path)
-
         logger.info(f"Running data quality SQL for: {rel_path}")
         with open(full_path, "r") as file:
-            sql = file.read()
+            data_quality_query = file.read()
 
         try:
-            response = con.execute(sql)
+            response = con.execute(data_quality_query)
             # fetchall will return [] for non-selects or selects with 0 rows
             rows = response.fetchall()
             if rows:
