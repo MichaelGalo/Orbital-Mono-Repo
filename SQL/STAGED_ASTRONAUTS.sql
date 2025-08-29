@@ -13,4 +13,5 @@ SELECT
     spacewalks_count,
     url,
     thumbnail_url
-FROM RAW.ASTRONAUTS;
+FROM RAW.ASTRONAUTS
+WHERE name IS NOT NULL;
