@@ -52,7 +52,7 @@ Typical flow: ingest -> standardize/transform -> quality test ->clean -> serve
 
 ## Architecture
 
-![System Diagram](docs/architecture.png)
+![System Diagram](screenshots/Orbital_Architecture.png)
 
 ## Tech Stack
 
