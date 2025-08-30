@@ -41,10 +41,12 @@ def db_sync():
     ]
 
     execute_SQL_file(con, staged_queries)
+    ducklake_refresh(con)
 
     if data_path + "/STAGED":
         if passed_data_quality_checks() == True:
             execute_SQL_file(con, cleaned_queries)
+            ducklake_refresh(con)
         else:
             logger.warning("Data quality checks failed. Continuing to use most recent successful data.")
             pass
