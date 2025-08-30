@@ -4,6 +4,7 @@ import io
 import isodate
 import duckdb
 import polars as pl
+from urllib.parse import urlencode
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(parent_path)
@@ -131,6 +132,37 @@ def write_data_to_minio(parquet_buffer, bucket_name, object_name, folder_name=No
         logger.info(f"Successfully wrote {full_object_name} to bucket {bucket_name}")
     except Exception as e:
         logger.error(f"Failed to write data to MinIO: {e}")
+
+def add_query_params(base_url, params):
+    """
+    Append params to base_url without parsing the URL first.
+    - Skips params with value None.
+    - Values are converted to strings and URL-encoded.
+    - Handles whether base_url already contains '?' or ends with '?' or '&'.
+    """
+    if not params:
+        return base_url
+
+    cleaned_params = {}
+    for name, value in params.items():
+        if value is None:
+            continue
+        cleaned_params[str(name)] = str(value)
+
+    if not cleaned_params:
+        return base_url
+
+    encoded_query = urlencode(cleaned_params, doseq=True)
+
+    if base_url.endswith('?') or base_url.endswith('&'):
+        separator = ''
+    elif '?' in base_url:
+        separator = '&'
+    else:
+        separator = '?'
+
+    result = f"{base_url}{separator}{encoded_query}"
+    return result
 
 def iso_to_human(iso_str):
     dur = isodate.parse_duration(iso_str)
