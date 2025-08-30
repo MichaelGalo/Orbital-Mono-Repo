@@ -3,7 +3,8 @@ import requests
 from dotenv import load_dotenv
 import polars as pl
 import time
-from utils import write_data_to_minio, process_astronaut_data, convert_dataframe_to_parquet, add_query_params
+from datetime import datetime, date, timezone
+from utils import write_data_to_minio, process_astronaut_data, convert_dataframe_to_parquet, add_query_params, handle_date_adjustment
 from db_sync import db_sync
 from logger import setup_logging
 from prefect import flow, task
@@ -61,11 +62,15 @@ def ingest_and_store_api_data(API_url, output_file_name, minio_bucket):
 @flow(name="data_ingestion_flow")
 def data_ingestion():
     tick = time.time()
+
+    today = datetime.now(timezone.utc).date()
+    start_date = handle_date_adjustment(today, years=5).strftime("%Y-%m-%d")
+    end_date = today.strftime("%Y-%m-%d")
     minio_bucket = os.getenv("MINIO_BUCKET_NAME")
 
     nasa_donki_url = add_query_params(os.getenv("NASA_DONKI_API"), {
-        "startDate": "2020-01-01",
-        "endDate": "2025-07-31",
+        "startDate": start_date,
+        "endDate": end_date,
         "type": "all",
         "api_key": os.getenv("NASA_API_KEY")
     })

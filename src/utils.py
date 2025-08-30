@@ -214,3 +214,10 @@ def process_astronaut_data(astronauts_dataframe):
     )
     result = astronauts_dataframe
     return result
+
+def handle_date_adjustment(from_date, years):
+    try:
+        result = from_date.replace(year=from_date.year - years)
+        return result
+    except ValueError:
+        return from_date.replace(month=2, day=28, year=from_date.year - years)
