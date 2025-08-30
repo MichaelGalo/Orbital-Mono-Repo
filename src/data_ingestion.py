@@ -3,7 +3,7 @@ import requests
 from dotenv import load_dotenv
 import polars as pl
 import time
-from utils import write_data_to_minio, process_astronaut_data, convert_dataframe_to_parquet, update_data
+from utils import write_data_to_minio, process_astronaut_data, convert_dataframe_to_parquet, add_query_params
 from db_sync import db_sync
 from logger import setup_logging
 from prefect import flow, task
@@ -18,7 +18,8 @@ def fetch_api_data(base_url):
     response.raise_for_status()
     data = response.json()
 
-    if base_url != os.getenv("THE_SPACE_DEVS_API"):
+    astro_base_url = os.getenv("THE_SPACE_DEVS_API")
+    if astro_base_url not in base_url:
         result = pl.DataFrame(data)
         return result
 
@@ -45,7 +46,7 @@ def query_confirmed_planets():
     except Exception as e:
         logger.error(f"Query failed: {e}")
 
-def ingest_exoplanets_data(output_file_name, minio_bucket):
+def ingest_and_store_exoplanets_data(output_file_name, minio_bucket):
     exoplanets_parquet_buffer = query_confirmed_planets()
     logger.info("Writing Exoplanets Data to MinIO Storage")
     write_data_to_minio(exoplanets_parquet_buffer, minio_bucket, output_file_name, "RAW")
@@ -62,16 +63,26 @@ def data_ingestion():
     tick = time.time()
     minio_bucket = os.getenv("MINIO_BUCKET_NAME")
 
-    nasa_donki_url = f"{os.getenv('NASA_DONKI_API')}{os.getenv('NASA_API_KEY')}"
-    nasa_apod_url = f"{os.getenv('NASA_APOD_API')}{os.getenv('NASA_API_KEY')}"
-    astronaut_url = os.getenv("THE_SPACE_DEVS_API")
+    nasa_donki_url = add_query_params(os.getenv("NASA_DONKI_API"), {
+        "startDate": "2020-01-01",
+        "endDate": "2025-07-31",
+        "type": "all",
+        "api_key": os.getenv("NASA_API_KEY")
+    })
+    nasa_apod_url = add_query_params(os.getenv("NASA_APOD_API"), {
+        "api_key": os.getenv("NASA_API_KEY")
+    })
+    astronaut_url = add_query_params(os.getenv("THE_SPACE_DEVS_API"), {
+        "in_space": "true",
+        "is_human": "true"
+    })
 
     nasa_donki_filename = "nasa_donki.parquet"
     nasa_apod_filename = "nasa_apod.parquet"
     nasa_exoplanets_filename = "nasa_exoplanets.parquet"
     astronaut_filename = "astronauts.parquet"
 
-    ingest_exoplanets_data(nasa_exoplanets_filename, minio_bucket)
+    ingest_and_store_exoplanets_data(nasa_exoplanets_filename, minio_bucket)
     ingest_and_store_api_data(nasa_donki_url, nasa_donki_filename, minio_bucket)
     ingest_and_store_api_data(nasa_apod_url, nasa_apod_filename, minio_bucket)
     ingest_and_store_api_data(astronaut_url, astronaut_filename, minio_bucket)
