@@ -1,11 +1,11 @@
+from fastapi import HTTPException
+from src.logger import setup_logging
 import os
 import sys
+import duckdb
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(parent_path)
-from fastapi import HTTPException
-from src.logger import setup_logging
-import duckdb
 
 logger = setup_logging()
 
@@ -40,7 +40,7 @@ def fetch_single_dataset(dataset_id, offset, limit):
         
         duckdb.install_extension("ducklake")
         con = duckdb.connect(':memory:')
-        logger.info(f"Connected to in-memory DuckDB database")
+        logger.info("Connected to in-memory DuckDB database")
 
         data_path = os.path.join(parent_path, "data")
         catalog_path = os.path.join(parent_path, "catalog.ducklake")

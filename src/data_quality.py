@@ -1,10 +1,11 @@
+from logger import setup_logging
+from utils import duckdb_con_init, ducklake_init, ducklake_attach_minio
 import os
 import sys
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(parent_path)
-from logger import setup_logging
-from utils import duckdb_con_init, ducklake_init, ducklake_attach_minio
+
 
 logger = setup_logging()
 

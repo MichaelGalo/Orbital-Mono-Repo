@@ -1,8 +1,6 @@
-import os
 import polars as pl
 from datetime import datetime
-from unittest.mock import Mock, patch, mock_open
-from src.utils import add_query_params, iso_to_human, handle_date_adjustment, convert_dataframe_to_parquet, execute_SQL_file_list
+from src.utils import add_query_params, iso_to_human, handle_date_adjustment, convert_dataframe_to_parquet
 
 def test_add_query_params():
     url = "https://example.com"

@@ -1,3 +1,5 @@
+from minio import Minio
+from logger import setup_logging
 import sys
 import os
 import io
@@ -8,8 +10,6 @@ from urllib.parse import urlencode
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(parent_path)
-from minio import Minio
-from logger import setup_logging
 
 logger = setup_logging()
 
@@ -38,7 +38,7 @@ def duckdb_con_init():
     logger.info("DuckDB extensions loaded successfully")
 
     con = duckdb.connect(':memory:')
-    logger.info(f"Connected to in-memory DuckDB database")
+    logger.info("Connected to in-memory DuckDB database")
     return con
 
 def ducklake_init(con, data_path, catalog_path):
