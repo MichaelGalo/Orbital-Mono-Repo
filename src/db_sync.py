@@ -2,7 +2,7 @@ from logger import setup_logging
 import os
 import sys
 import time
-from utils import duckdb_con_init, ducklake_init, ducklake_attach_minio, ducklake_refresh, schema_creation, execute_SQL_file, update_data
+from utils import duckdb_con_init, ducklake_init, ducklake_attach_minio, ducklake_refresh, schema_creation, execute_SQL_file_list, update_data
 from data_quality import passed_data_quality_checks
 from dotenv import load_dotenv
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -40,12 +40,12 @@ def db_sync():
         'SQL/CLEANED_NASA_EXOPLANETS.sql'
     ]
 
-    execute_SQL_file(con, staged_queries)
+    execute_SQL_file_list(con, staged_queries)
     ducklake_refresh(con)
 
     if data_path + "/STAGED":
         if passed_data_quality_checks() == True:
-            execute_SQL_file(con, cleaned_queries)
+            execute_SQL_file_list(con, cleaned_queries)
             ducklake_refresh(con)
         else:
             logger.warning("Data quality checks failed. Continuing to use most recent successful data.")

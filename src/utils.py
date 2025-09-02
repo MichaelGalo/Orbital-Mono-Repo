@@ -13,7 +13,7 @@ from logger import setup_logging
 
 logger = setup_logging()
 
-def execute_SQL_file(con, list_of_file_paths):
+def execute_SQL_file_list(con, list_of_file_paths):
     for file_path in list_of_file_paths:
         full_path = os.path.join(parent_path, file_path)
         if not os.path.exists(full_path):
