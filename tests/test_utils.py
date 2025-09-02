@@ -1,6 +1,11 @@
+import os
+import sys
 import polars as pl
 from datetime import datetime
-from src.utils import add_query_params, iso_to_human, handle_date_adjustment, convert_dataframe_to_parquet
+from utils import add_query_params, iso_to_human, handle_date_adjustment, convert_dataframe_to_parquet
+current_path = os.path.dirname(os.path.abspath(__file__))
+parent_path = os.path.abspath(os.path.join(current_path, "src"))
+sys.path.append(parent_path)
 
 def test_add_query_params():
     url = "https://example.com"
