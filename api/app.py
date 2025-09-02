@@ -1,13 +1,14 @@
-import os
-import sys
-current_path = os.path.dirname(os.path.abspath(__file__))
-parent_path = os.path.abspath(os.path.join(current_path, ".."))
-sys.path.append(parent_path)
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from src.logger import setup_logging
 from api.utils import get_datasets_list, fetch_single_dataset
+import os
+import sys
 import datetime
+current_path = os.path.dirname(os.path.abspath(__file__))
+parent_path = os.path.abspath(os.path.join(current_path, ".."))
+sys.path.append(parent_path)
+
 
 app = FastAPI()
 logger = setup_logging()

@@ -3,7 +3,7 @@ import requests
 from dotenv import load_dotenv
 import polars as pl
 import time
-from datetime import datetime, date, timezone
+from datetime import datetime, timezone
 from utils import write_data_to_minio, process_astronaut_data, convert_dataframe_to_parquet, add_query_params, handle_date_adjustment
 from db_sync import db_sync
 from logger import setup_logging
@@ -53,7 +53,7 @@ def ingest_and_store_exoplanets_data(output_file_name, minio_bucket):
     write_data_to_minio(exoplanets_parquet_buffer, minio_bucket, output_file_name, "RAW")
 
 def ingest_and_store_api_data(API_url, output_file_name, minio_bucket):
-    logger.info(f"Fetching Data from API")
+    logger.info("Fetching Data from API")
     api_dataframe = fetch_api_data(API_url)
     api_parquet_buffer = convert_dataframe_to_parquet(api_dataframe)
     logger.info("Writing API Data to MinIO Storage")
