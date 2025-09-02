@@ -3,7 +3,7 @@ import requests
 from dotenv import load_dotenv
 import polars as pl
 import time
-from datetime import datetime, date, timezone
+from datetime import datetime, timezone
 from utils import write_data_to_minio, process_astronaut_data, convert_dataframe_to_parquet, add_query_params, handle_date_adjustment
 from db_sync import db_sync
 from logger import setup_logging
