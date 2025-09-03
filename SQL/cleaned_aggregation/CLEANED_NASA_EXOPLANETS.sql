@@ -1,6 +1,9 @@
 CREATE OR REPLACE TABLE CLEANED.NASA_EXOPLANETS AS
 SELECT
     planet_name,
+    planet_letter,
+    host_star,
+    system_distance,
     discovery_year,
     controversial_flag,
     discovery_method,

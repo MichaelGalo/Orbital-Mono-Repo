@@ -1,6 +1,9 @@
 CREATE OR REPLACE TABLE STAGED.NASA_EXOPLANETS AS
 SELECT
     pl_name AS planet_name,
+    pl_letter AS planet_letter,
+    hostname AS host_star,
+    sy_dist AS system_distance,
     disc_year AS discovery_year,
     pl_controv_flag AS controversial_flag,
     discoverymethod AS discovery_method,
