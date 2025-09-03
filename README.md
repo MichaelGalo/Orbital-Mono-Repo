@@ -1,54 +1,48 @@
 # Orbital
 
-An end-to-end data engineering capstone that demonstrates a modern medallion (Bronze → Silver → Gold) data pipeline using lightweight, file-based tooling with DuckDB and DuckLake.
+An end-to-end data engineering capstone that demonstrates a modern data lakehouse pipeline using lightweight, file-based tooling with DuckDB and DuckLake to produce a production-capable data product.
+
+Orbital, simplifying the astronomical.
 
 ## Table of contents
 
 - [Overview](#overview)
 - [Features](#features)
-- [Data architecture](#data-architecture)
+- [Data Sources](#data-sources)
 - [Architecture](#architecture)
 - [Core technologies](#core-technologies)
-- [Future improvements](#future-improvements)
+- [Data Schemas](#data-schemas)
+
 
 ## Overview
 
 This project is a production-minded capstone that ingests public datasets related to Space Exploration, validates and standardizes them, and exposes clean, analysis/web-ready tables for downstream use. The primary goals are:
 
 - Demonstrate a modern lakehouse data architecture and medallion ELT patterns
-- Use fast, local analytical engines (DuckDB + DuckLake) for exploration and testing
-- Provide repeatable pipelines and clear data quality checks
+- Use fast, in-memory analytical engines (DuckDB + DuckLake) for exploration and testing
+- Provide repeatable pipelines and clear data quality checks that update automatically each day
 - Produce datasets that are ready for analytics, visualization, and/or loading into a cloud warehouse
 - Create clean, reusable code for future endeavors
 
 The repository contains pipeline scripts, utilities, orchestration, API, and when run, a catalog of datasets arranged into raw, staged, and cleaned layers in the `data/` directory. The current .parquet files are gitignored for privacy.
 
+## Data Sources
+
+- Astronaut Data:The Space Devs Launch Library 2 API
+- Exoplanet Data: Astroquery SDK (Community maintained access to NASA's Exoplanet Database)
+- Space Weather Notifications: NASA DONKI (Database of Notifications, Knowledge and Information) API
+- Hero Image: NASA APOD (Astronomy Picture of the Day) API
+
 ## Features
 
-- Layered medallion architecture (Raw → Staged → Clean)
-- File-based analytics using DuckDB and DuckLake for fast local queries
-- Lightweight pipeline scripts for ingestion, quality checks, and sync
+- MinIO data lake for storage (easily adapted to S3)
+- Layered medallion catalog architecture (Raw → Staged → Clean)
+- File-based analytics using DuckDB and DuckLake for fast queries
+- Lightweight pipeline scripts for ingestion, quality checks, and lakehouse catalog sync
 - REST API programmatic data access for serving cleaned data
 - Data Quality Tests with custom python & SQL
 - Unit tests with pytest and structured logging
-
-## Data architecture
-
-This project follows a medallion architecture with three primary layers:
-
-- Raw (Bronze)
-	- Immutable ingested data as originally fetched from APIs that are time-stamped
-	- Stored in MinIO with catalog .parquet stored in `data/RAW/`
-
-- Staged (Silver)
-	- Standardized and validated records, ready for transformation
-	- Stored in `data/STAGED/`
-
-- Cleaned (Gold)
-	- Business-ready, deduplicated tables suitable for analytics or web services
-	- Stored in `data/CLEANED/`
-
-Typical flow: ingest -> standardize/transform -> quality test ->clean -> serve
+- Orchestration with Prefect for daily updated data
 
 ## Architecture
 
@@ -68,3 +62,21 @@ Typical flow: ingest -> standardize/transform -> quality test ->clean -> serve
 | **Data Quality** | ![SQL](https://img.shields.io/badge/SQL-0066CC?style=flat-square&logo=sql&logoColor=white) | Data quality checks using SQL |
 | **Orchestration** | ![Prefect](https://img.shields.io/badge/Prefect-3E4B99?style=flat-square&logo=prefect&logoColor=white) | Workflow automation and scheduling |
 | **CI/CD** | ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white) | Continuous integration and deployment |
+
+## Data Schemas
+
+This project follows a medallion architecture with three primary layers:
+
+- Raw (Bronze)
+	- Immutable ingested data as originally fetched from APIs that are time-stamped
+	- Stored in MinIO with catalog .parquet stored in `data/RAW/`
+
+- Staged (Silver)
+	- Standardized and validated records, ready for transformation
+	- Stored in `data/STAGED/`
+
+- Cleaned (Gold)
+	- Business-ready, deduplicated tables suitable for analytics or web services
+	- Stored in `data/CLEANED/`
+
+Typical flow: ingest -> standardize/transform -> quality test -> clean -> serve
