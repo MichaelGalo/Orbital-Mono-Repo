@@ -1,19 +1,16 @@
+from utils import write_data_to_minio, process_astronaut_data, convert_dataframe_to_parquet
+from logger import setup_logging
+import time
 import os
 import requests
 from dotenv import load_dotenv
 import polars as pl
-import time
-from datetime import datetime, timezone
-from utils import write_data_to_minio, process_astronaut_data, convert_dataframe_to_parquet, add_query_params, handle_date_adjustment
-from db_sync import db_sync
-from logger import setup_logging
-from prefect import flow, task
-from prefect.client.schemas.schedules import CronSchedule
+from prefect import task
 from astroquery.ipac.nexsci.nasa_exoplanet_archive import NasaExoplanetArchive
 logger = setup_logging()
+
 load_dotenv()
 
-@task(name="fetching_api_data")
 def fetch_api_data(base_url):
     response = requests.get(base_url)
     response.raise_for_status()
@@ -31,7 +28,6 @@ def fetch_api_data(base_url):
     return result
 
 
-@task(name="exoplanet_data_fetch")
 def query_confirmed_planets():
     try:
         tick = time.time()
@@ -47,63 +43,16 @@ def query_confirmed_planets():
     except Exception as e:
         logger.error(f"Query failed: {e}")
 
-def ingest_and_store_exoplanets_data(output_file_name, minio_bucket):
+@task(name="exoplanet_data_ingestion")
+def ingest_exoplanets(output_file_name, minio_bucket):
     exoplanets_parquet_buffer = query_confirmed_planets()
     logger.info("Writing Exoplanets Data to MinIO Storage")
     write_data_to_minio(exoplanets_parquet_buffer, minio_bucket, output_file_name, "RAW")
 
-def ingest_and_store_api_data(API_url, output_file_name, minio_bucket):
+@task(name="api_data_ingestion")
+def ingest_API_data(API_url, output_file_name, minio_bucket):
     logger.info("Fetching Data from API")
     api_dataframe = fetch_api_data(API_url)
     api_parquet_buffer = convert_dataframe_to_parquet(api_dataframe)
     logger.info("Writing API Data to MinIO Storage")
     write_data_to_minio(api_parquet_buffer, minio_bucket, output_file_name, "RAW")
-
-@flow(name="data_ingestion_flow")
-def data_ingestion():
-    tick = time.time()
-
-    today = datetime.now(timezone.utc).date()
-    start_date = handle_date_adjustment(today, years=5).strftime("%Y-%m-%d")
-    end_date = today.strftime("%Y-%m-%d")
-    minio_bucket = os.getenv("MINIO_BUCKET_NAME")
-
-    nasa_donki_url = add_query_params(os.getenv("NASA_DONKI_API"), {
-        "startDate": start_date,
-        "endDate": end_date,
-        "type": "all",
-        "api_key": os.getenv("NASA_API_KEY")
-    })
-    nasa_apod_url = add_query_params(os.getenv("NASA_APOD_API"), {
-        "api_key": os.getenv("NASA_API_KEY")
-    })
-    astronaut_url = add_query_params(os.getenv("THE_SPACE_DEVS_API"), {
-        "in_space": "true",
-        "is_human": "true"
-    })
-
-    nasa_donki_filename = "nasa_donki.parquet"
-    nasa_apod_filename = "nasa_apod.parquet"
-    nasa_exoplanets_filename = "nasa_exoplanets.parquet"
-    astronaut_filename = "astronauts.parquet"
-
-    ingest_and_store_exoplanets_data(nasa_exoplanets_filename, minio_bucket)
-    ingest_and_store_api_data(nasa_donki_url, nasa_donki_filename, minio_bucket)
-    ingest_and_store_api_data(nasa_apod_url, nasa_apod_filename, minio_bucket)
-    ingest_and_store_api_data(astronaut_url, astronaut_filename, minio_bucket)
-
-    tock = time.time() - tick
-    logger.info(f"Data ingestion completed in {tock:.2f} seconds.")
-
-    logger.info("Synchronizing Data to Database")
-    db_sync()    
-
-if __name__ == "__main__":
-    data_ingestion.serve(
-        name="Data_Ingestion",
-        schedule=CronSchedule(
-            cron="0 1 * * *",
-            timezone="UTC"
-        ),
-        tags=["data_ingestion"]
-    )

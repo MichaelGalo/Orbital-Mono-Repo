@@ -5,13 +5,16 @@ import time
 from utils import duckdb_con_init, ducklake_init, ducklake_attach_minio, ducklake_refresh, schema_creation, execute_SQL_file_list, update_data
 from data_quality import passed_data_quality_checks
 from dotenv import load_dotenv
+from prefect import task
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(parent_path)
+
 load_dotenv()
 
 logger = setup_logging()
 
+@task(name="database_sync")
 def db_sync():
     total_start_time = time.time()
     logger.info("Starting Orbital database sync")
@@ -27,17 +30,17 @@ def db_sync():
     ducklake_refresh(con)
 
     staged_queries = [
-        'SQL/STAGED_ASTRONAUTS.sql',
-        'SQL/STAGED_NASA_APOD.sql',
-        'SQL/STAGED_NASA_DONKI.sql',
-        'SQL/STAGED_NASA_EXOPLANETS.sql'
+        'SQL/staging/STAGED_ASTRONAUTS.sql',
+        'SQL/staging/STAGED_NASA_APOD.sql',
+        'SQL/staging/STAGED_NASA_DONKI.sql',
+        'SQL/staging/STAGED_NASA_EXOPLANETS.sql'
     ]
 
     cleaned_queries = [
-        'SQL/CLEANED_ASTRONAUTS.sql',
-        'SQL/CLEANED_NASA_APOD.sql',
-        'SQL/CLEANED_NASA_DONKI.sql',
-        'SQL/CLEANED_NASA_EXOPLANETS.sql'
+        'SQL/cleaned_aggregation/CLEANED_ASTRONAUTS.sql',
+        'SQL/cleaned_aggregation/CLEANED_NASA_APOD.sql',
+        'SQL/cleaned_aggregation/CLEANED_NASA_DONKI.sql',
+        'SQL/cleaned_aggregation/CLEANED_NASA_EXOPLANETS.sql'
     ]
 
     execute_SQL_file_list(con, staged_queries)

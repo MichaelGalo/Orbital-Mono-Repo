@@ -19,10 +19,10 @@ def passed_data_quality_checks():
     ducklake_attach_minio(con)
 
     data_quality_queries = [
-        "SQL/QUALITY_ASTRONAUTS.sql",
-        "SQL/QUALITY_NASA_APOD.sql",
-        "SQL/QUALITY_NASA_EXOPLANETS.sql",
-        "SQL/QUALITY_NASA_DONKI.sql"
+        "SQL/data_quality/QUALITY_ASTRONAUTS.sql",
+        "SQL/data_quality/QUALITY_NASA_APOD.sql",
+        "SQL/data_quality/QUALITY_NASA_EXOPLANETS.sql",
+        "SQL/data_quality/QUALITY_NASA_DONKI.sql"
     ]
 
     all_pass = True
