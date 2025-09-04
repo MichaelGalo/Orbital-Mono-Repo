@@ -12,6 +12,7 @@ Orbital, simplifying the astronomical.
 - [Architecture](#architecture)
 - [Core technologies](#core-technologies)
 - [Data Schemas](#data-schemas)
+- [Running the project locally](#running-the-project-locally)
 
 
 ## Overview
@@ -80,3 +81,35 @@ This project follows a medallion architecture with three primary layers:
 	- Stored in `data/CLEANED/`
 
 Typical flow: ingest -> standardize/transform -> quality test -> clean -> serve
+
+## Running the Project Locally
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-username/your-repo.git
+   cd your-repo
+   ```
+
+2. **Set up a virtual environment**:
+   ```bash
+   uv init
+   uv sync
+   ```
+
+3. **Setup MinIO**:
+	```bash
+	docker compose up -d
+	```
+
+4. **Create MinIO Bucket**:
+	- Create a bucket called `orbital`
+
+5. **Run the Prefect flow**:
+   ```bash
+   uv run src/runner.py
+   ```
+
+6. **Start the FastAPI server**:
+   ```bash
+   fastapi dev api/app.py
+   ```

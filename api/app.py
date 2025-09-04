@@ -1,13 +1,13 @@
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.middleware.cors import CORSMiddleware
-from src.logger import setup_logging
-from api.utils import get_datasets_list, fetch_single_dataset
 import os
 import sys
 import datetime
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(parent_path)
+from src.logger import setup_logging # noqa: E402
+from api.utils import get_datasets_list, fetch_single_dataset # noqa: E402
 
 
 app = FastAPI()
