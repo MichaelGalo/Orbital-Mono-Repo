@@ -3,8 +3,6 @@ import requests
 import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 load_dotenv()
 
@@ -85,10 +83,38 @@ else:
         st.write(selected_row.get("description"))
 
 
-# ----------------- DONKI Section -----------------
-st.header("Space Weather Database Of Notifications, Knowledge, Information (DONKI)")
+# ----------------- DONKI Analysis -----------------
+st.header("Space Weather Alerts")
+st.markdown("This section analyzes space weather alerts from NASA's DONKI (Space Weather Database Of Notifications, Knowledge, Information).")
+
 donki_dataframe = get_dataset("DONKI", datasets["DONKI"])
-st.dataframe(donki_dataframe)
+
+if donki_dataframe is not None and not donki_dataframe.empty:
+    message_type_mapping = {
+        "CME": "Coronal Mass Ejection",
+        "CMEAnalysis": "Coronal Mass Ejection Analysis",
+        "GST": "Geomagnetic Storm",
+        "IPS": "Interplanetary Shock",
+        "FLR": "Solar Flare",
+        "SPE": "Solar Particle Event",
+        "MPC": "Magnetopause Crossing",
+        "RBE": "Radiation Belt Enhancement",
+        "HSS": "High Speed Stream",
+        "Notifications": "Notifications"
+    }
+
+    donki_dataframe['message_type_name'] = donki_dataframe['message_type'].map(message_type_mapping)
+    type_counts = donki_dataframe['message_type_name'].value_counts()
+
+    total_alerts = len(donki_dataframe)
+    st.metric("Total Alerts (5-year period)", total_alerts)
+
+    st.subheader("Number of Messages by Type")
+    st.bar_chart(type_counts)
+
+else:
+    st.warning("No DONKI data available for analysis.")
+
 
 # ----------------- Exoplanets Section -----------------
 st.header("Exoplanets")
