@@ -59,7 +59,31 @@ st.bar_chart(agency_counts)
 # ----------------- APOD Section -----------------
 st.header("Astronomy Picture of the Day (APOD)")
 apod_dataframe = get_dataset("APOD", datasets["APOD"])
-st.dataframe(apod_dataframe)
+if apod_dataframe is None or apod_dataframe.empty:
+    st.warning("No APOD data available.")
+else:
+    selected_row = apod_dataframe.iloc[0]
+
+    if "title" in apod_dataframe.columns:
+        caption_text = selected_row.get("title", "Untitled")
+    elif "date" in apod_dataframe.columns:
+        caption_text = selected_row.get("date", "Untitled")
+    else:
+        caption_text = None
+
+    if "url" in apod_dataframe.columns and selected_row.get("url"):
+        st.image(str(selected_row.get("url")), caption=caption_text, use_container_width=True)
+    else:
+        st.info("Current media type not supported")
+        st.markdown("Visit the [APOD website](https://apod.nasa.gov/apod/astropix.html) for more details.")
+
+    if "explanation" in apod_dataframe.columns:
+        st.markdown("**Description**")
+        st.write(selected_row.get("explanation"))
+    elif "description" in apod_dataframe.columns:
+        st.markdown("**Description**")
+        st.write(selected_row.get("description"))
+
 
 # ----------------- DONKI Section -----------------
 st.header("Space Weather Database Of Notifications, Knowledge, Information (DONKI)")
