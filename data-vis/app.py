@@ -2,6 +2,7 @@ import os
 import requests
 import pandas as pd
 import streamlit as st
+import numpy as np
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,6 +25,7 @@ def get_dataset(name, url):
     except Exception as e:
         st.error(f"Failed to load {name}: {e}")
 
+st.set_page_config(page_title="Rapid Dashboard", layout="wide")
 st.title("Rapid Dashboard")
 
 # ----------------- Astronauts Section -----------------
@@ -117,6 +119,58 @@ else:
 
 
 # ----------------- Exoplanets Section -----------------
-st.header("Exoplanets")
+st.header("Exoplanets Overview")
 exoplanets_dataframe = get_dataset("Exoplanets", datasets["Exoplanets"])
-st.dataframe(exoplanets_dataframe)
+
+if exoplanets_dataframe is not None and not exoplanets_dataframe.empty:
+    # --- Glance Metrics ---
+    total_exoplanets = len(exoplanets_dataframe)
+    avg_distance = round(exoplanets_dataframe["system_distance"].mean(), 2)
+    unique_host_stars = exoplanets_dataframe["host_star"].nunique()
+    controversial_count = exoplanets_dataframe["controversial_flag"].sum()
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Total Exoplanets", total_exoplanets)
+    col2.metric("Average Distance to Host Star (ly)", avg_distance)
+    col3.metric("Number of Host Stars", unique_host_stars)
+    col4.metric("Controversial Discoveries", controversial_count)
+
+    st.markdown("---")
+
+    # --- Histograms / Charts ---
+    st.subheader("Exoplanet Discoveries by Year")
+    discovery_year_counts = exoplanets_dataframe["discovery_year"].value_counts().sort_index()
+    st.bar_chart(discovery_year_counts)
+
+    # --- Planets by Discovery Method ---
+    st.subheader("Planets by Discovery Method")
+    method_counts = exoplanets_dataframe["discovery_method"].value_counts()
+    st.bar_chart(method_counts)
+
+    # --- Exoplanet Radius Compared to Earth (0.5 step bins) ---
+    st.subheader("Exoplanet Radius Compared to Earth")
+    radii = exoplanets_dataframe["radius_earth_radii"].dropna()
+    max_radius = min(radii.max(), 35)
+    bins = np.arange(0, max_radius + 0.5, 0.5)
+    counts, bin_edges = np.histogram(radii, bins=bins)
+    labels = [f"{bin_edges[i]:.1f}–{bin_edges[i+1]:.1f}" for i in range(len(bin_edges)-1)]
+    radius_df = pd.DataFrame({"Bin": pd.Categorical(labels, categories=labels, ordered=True), "Count": counts})
+    st.bar_chart(radius_df.set_index("Bin"))
+
+
+    # --- Host Star Radius Compared to Sun (0.5 step bins) ---
+    st.subheader("Host Star Ratio Compared to Sun")
+    star_radii = exoplanets_dataframe["star_radius_solar_radii"].dropna()
+    max_star_radius = min(star_radii.max(), 10)
+    bins = np.arange(0, max_star_radius + 0.5, 0.5)
+    counts, bin_edges = np.histogram(star_radii, bins=bins)
+    labels = [f"{bin_edges[i]:.1f}–{bin_edges[i+1]:.1f}" for i in range(len(bin_edges)-1)]
+
+    star_radius_df = pd.DataFrame({
+        "Bin": labels,
+        "Count": counts
+    })
+    st.bar_chart(star_radius_df.set_index("Bin"))
+
+else:
+    st.warning("No exoplanets data available.")
