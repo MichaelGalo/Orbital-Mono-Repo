@@ -50,15 +50,12 @@ def pipeline_runner():
     logger.info("Synchronizing Data to Database")
     db_sync()    
 
-# if __name__ == "__main__":
-#     pipeline_runner.serve(
-#         name="Pipeline_Runner",
-#         schedule=CronSchedule(
-#             cron="0 1 * * *",
-#             timezone="UTC"
-#         ),
-#         tags=["Pipeline"]
-#     )
-
 if __name__ == "__main__":
-    pipeline_runner() 
+    pipeline_runner.serve(
+        name="Pipeline_Runner",
+        schedule=CronSchedule(
+            cron="0 1 * * *",
+            timezone="UTC"
+        ),
+        tags=["Pipeline"]
+    )
