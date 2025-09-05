@@ -2,7 +2,7 @@ import os
 import sys
 import polars as pl
 from datetime import datetime
-from utils import add_query_params, iso_to_human, handle_date_adjustment, convert_dataframe_to_parquet, package_data_for_mongo
+from utils import add_query_params, iso_to_human, handle_date_adjustment, convert_dataframe_to_parquet, preprocess_apod_data
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, "src"))
 sys.path.append(parent_path)
@@ -36,3 +36,20 @@ def test_convert_dateframe_to_parquet():
     assert loaded_dataframe.shape == (3, 2)
     assert loaded_dataframe['column1'].to_list() == [1, 2, 3]
     assert loaded_dataframe['column2'].to_list() == ['a', 'b', 'c']
+
+def test_preprocess_apod_data():
+    test_dataframe = pl.DataFrame({
+        'title': ['a'],
+        'date': ['2025-01-01']  # something castable to Date
+    })
+    test_parquet_buffer = convert_dataframe_to_parquet(test_dataframe)
+    loaded_dataframe = pl.read_parquet(test_parquet_buffer)
+    fake_apod_preprocessed_dataframe = preprocess_apod_data(loaded_dataframe)
+
+    expected_columns = [
+        "resource", "concept_tags", "title", "date", "url", "hdurl", "media_type",
+        "explanation", "concepts", "thumbnail_url", "service_version", "copyright"
+    ]
+
+    assert fake_apod_preprocessed_dataframe.shape == (1, 12)
+    assert fake_apod_preprocessed_dataframe.columns == expected_columns
