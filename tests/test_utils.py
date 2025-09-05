@@ -36,9 +36,3 @@ def test_convert_dateframe_to_parquet():
     assert loaded_dataframe.shape == (3, 2)
     assert loaded_dataframe['column1'].to_list() == [1, 2, 3]
     assert loaded_dataframe['column2'].to_list() == ['a', 'b', 'c']
-
-def test_package_data_for_mongo():
-    test_data = {"name": "John", "age": 30}
-    result = package_data_for_mongo(test_data)
-    assert result is not None
-    assert result.getvalue() == '[{"name": "John", "age": 30}]'

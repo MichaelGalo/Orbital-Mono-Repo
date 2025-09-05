@@ -1,4 +1,4 @@
-from utils import write_data_to_minio, process_astronaut_data, convert_dataframe_to_parquet, write_data_to_mongo, package_data_for_mongo
+from utils import write_data_to_minio, preprocess_astronaut_data, convert_dataframe_to_parquet, preprocess_apod_data
 from logger import setup_logging
 import time
 import os
@@ -12,27 +12,28 @@ logger = setup_logging()
 load_dotenv()
 
 def fetch_api_dataframe(base_url):
+    astro_base_url = os.getenv("THE_SPACE_DEVS_API")
+    apod_base_url = os.getenv("NASA_APOD_API")
+
     response = requests.get(base_url)
     response.raise_for_status()
     data = response.json()
-
-    astro_base_url = os.getenv("THE_SPACE_DEVS_API")
-    if astro_base_url not in base_url:
+    if astro_base_url not in base_url and apod_base_url not in base_url:
         result = pl.DataFrame(data)
         return result
-
-    astronauts_dataframe = pl.DataFrame(data["results"])
-    processed_astronaut_dataframe = process_astronaut_data(astronauts_dataframe)
-
-    result = processed_astronaut_dataframe
-    return result
-
-def fetch_api_data(base_url):
-    response = requests.get(base_url)
-    response.raise_for_status()
-    data = response.json()
-    result = data
-    return result
+    
+    if astro_base_url in base_url:
+        astronauts_dataframe = pl.DataFrame(data["results"])
+        processed_astronaut_dataframe = preprocess_astronaut_data(astronauts_dataframe)
+        result = processed_astronaut_dataframe
+        return result
+    
+    else:
+        apod_dataframe = pl.DataFrame(data)
+        preprocessed_apod_dataframe = preprocess_apod_data(apod_dataframe)
+        result = preprocessed_apod_dataframe
+        return result
+   
 
 def query_confirmed_planets():
     try:
@@ -55,12 +56,6 @@ def ingest_exoplanets(output_file_name, minio_bucket):
     logger.info("Writing Exoplanets Data to MinIO Storage")
     write_data_to_minio(exoplanets_parquet_buffer, minio_bucket, output_file_name, "RAW")
 
-@task(name="apod_data_ingestion")
-def ingest_APOD(API_url, mongo_db, mongo_collection):
-    mongo_connection_string = os.getenv("MONGO_CONNECTION_STRING")
-    apod_data = fetch_api_data(API_url)
-    upload = package_data_for_mongo(apod_data)
-    write_data_to_mongo(upload, mongo_connection_string, mongo_db, mongo_collection)
 
 @task(name="api_data_ingestion")
 def ingest_API_data(API_url, output_file_name, minio_bucket):
