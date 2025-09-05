@@ -1,4 +1,4 @@
-from utils import write_data_to_minio, process_astronaut_data, convert_dataframe_to_parquet
+from utils import write_data_to_minio, process_astronaut_data, convert_dataframe_to_parquet, write_data_to_mongo, package_data_for_mongo
 from logger import setup_logging
 import time
 import os
@@ -11,7 +11,7 @@ logger = setup_logging()
 
 load_dotenv()
 
-def fetch_api_data(base_url):
+def fetch_api_dataframe(base_url):
     response = requests.get(base_url)
     response.raise_for_status()
     data = response.json()
@@ -27,6 +27,12 @@ def fetch_api_data(base_url):
     result = processed_astronaut_dataframe
     return result
 
+def fetch_api_data(base_url):
+    response = requests.get(base_url)
+    response.raise_for_status()
+    data = response.json()
+    result = data
+    return result
 
 def query_confirmed_planets():
     try:
@@ -49,10 +55,17 @@ def ingest_exoplanets(output_file_name, minio_bucket):
     logger.info("Writing Exoplanets Data to MinIO Storage")
     write_data_to_minio(exoplanets_parquet_buffer, minio_bucket, output_file_name, "RAW")
 
+@task(name="apod_data_ingestion")
+def ingest_APOD(API_url, mongo_db, mongo_collection):
+    mongo_connection_string = os.getenv("MONGO_CONNECTION_STRING")
+    apod_data = fetch_api_data(API_url)
+    upload = package_data_for_mongo(apod_data)
+    write_data_to_mongo(upload, mongo_connection_string, mongo_db, mongo_collection)
+
 @task(name="api_data_ingestion")
 def ingest_API_data(API_url, output_file_name, minio_bucket):
     logger.info("Fetching Data from API")
-    api_dataframe = fetch_api_data(API_url)
+    api_dataframe = fetch_api_dataframe(API_url)
     api_parquet_buffer = convert_dataframe_to_parquet(api_dataframe)
     logger.info("Writing API Data to MinIO Storage")
     write_data_to_minio(api_parquet_buffer, minio_bucket, output_file_name, "RAW")

@@ -6,6 +6,8 @@ import io
 import isodate
 import duckdb
 import polars as pl
+import json
+from pymongo import MongoClient, server_api
 from urllib.parse import urlencode
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
@@ -221,3 +223,25 @@ def handle_date_adjustment(from_date, years):
         return result
     except ValueError:
         return from_date.replace(month=2, day=28, year=from_date.year - years)
+    
+
+def write_data_to_mongo(data, connection_string, db_name, collection_name):
+    try: 
+        client = MongoClient(
+            connection_string,
+            server_api=server_api.ServerApi("1"),
+        )
+        db = client[f"{db_name}"]
+        upload = json.load(data)
+        db[collection_name].insert_many(upload)
+    except Exception as e:
+        logger.error(f"Error in writing data to Mongo: {e}")
+        raise
+
+def package_data_for_mongo(data):
+    if isinstance(data, list):
+        docs = data
+    else:
+        docs = [data]
+    result = io.StringIO(json.dumps(docs))
+    return result

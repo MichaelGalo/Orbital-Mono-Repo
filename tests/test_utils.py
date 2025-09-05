@@ -2,7 +2,7 @@ import os
 import sys
 import polars as pl
 from datetime import datetime
-from utils import add_query_params, iso_to_human, handle_date_adjustment, convert_dataframe_to_parquet
+from utils import add_query_params, iso_to_human, handle_date_adjustment, convert_dataframe_to_parquet, package_data_for_mongo
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, "src"))
 sys.path.append(parent_path)
@@ -37,3 +37,8 @@ def test_convert_dateframe_to_parquet():
     assert loaded_dataframe['column1'].to_list() == [1, 2, 3]
     assert loaded_dataframe['column2'].to_list() == ['a', 'b', 'c']
 
+def test_package_data_for_mongo():
+    test_data = {"name": "John", "age": 30}
+    result = package_data_for_mongo(test_data)
+    assert result is not None
+    assert result.getvalue() == '[{"name": "John", "age": 30}]'

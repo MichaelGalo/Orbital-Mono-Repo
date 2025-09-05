@@ -1,5 +1,5 @@
 
-from data_ingestion import ingest_API_data, ingest_exoplanets
+from data_ingestion import ingest_API_data, ingest_exoplanets, ingest_APOD
 from utils import add_query_params, handle_date_adjustment
 from logger import setup_logging
 from db_sync import db_sync
@@ -18,6 +18,8 @@ def pipeline_runner():
     start_date = handle_date_adjustment(today, years=5).strftime("%Y-%m-%d")
     end_date = today.strftime("%Y-%m-%d")
     minio_bucket = os.getenv("MINIO_BUCKET_NAME")
+    mongo_collection = os.getenv("MONGO_COLLECTION")
+    mongo_db = os.getenv("MONGO_DB")
 
     nasa_donki_url = add_query_params(os.getenv("NASA_DONKI_API"), {
         "startDate": start_date,
@@ -34,14 +36,18 @@ def pipeline_runner():
     })
 
     nasa_donki_filename = "nasa_donki.parquet"
-    nasa_apod_filename = "nasa_apod.parquet"
     nasa_exoplanets_filename = "nasa_exoplanets.parquet"
     astronaut_filename = "astronauts.parquet"
+    nasa_apod_filename = "nasa_apod.parquet"
 
-    ingest_exoplanets(nasa_exoplanets_filename, minio_bucket)
-    ingest_API_data(nasa_donki_url, nasa_donki_filename, minio_bucket)
+    #TODO: remove old apod ingest
+    ingest_APOD(nasa_apod_url, mongo_db, mongo_collection)
+
     ingest_API_data(nasa_apod_url, nasa_apod_filename, minio_bucket)
+    ingest_API_data(nasa_donki_url, nasa_donki_filename, minio_bucket)
     ingest_API_data(astronaut_url, astronaut_filename, minio_bucket)
+    ingest_exoplanets(nasa_exoplanets_filename, minio_bucket)
+
 
     tock = time.time() - tick
     logger.info(f"Data ingestion completed in {tock:.2f} seconds.")
@@ -49,12 +55,15 @@ def pipeline_runner():
     logger.info("Synchronizing Data to Database")
     db_sync()    
 
+# if __name__ == "__main__":
+#     pipeline_runner.serve(
+#         name="Pipeline_Runner",
+#         schedule=CronSchedule(
+#             cron="0 1 * * *",
+#             timezone="UTC"
+#         ),
+#         tags=["Pipeline"]
+#     )
+
 if __name__ == "__main__":
-    pipeline_runner.serve(
-        name="Pipeline_Runner",
-        schedule=CronSchedule(
-            cron="0 1 * * *",
-            timezone="UTC"
-        ),
-        tags=["Pipeline"]
-    )
+    pipeline_runner() 
