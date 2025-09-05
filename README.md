@@ -113,3 +113,8 @@ Typical flow: ingest -> standardize/transform -> quality test -> clean -> serve
    ```bash
    fastapi dev api/app.py
    ```
+
+7. **View Data Visualization Dashboard**:
+   ```bash
+   streamlit run data-vis/app.py
+   ```
