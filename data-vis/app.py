@@ -147,7 +147,7 @@ if exoplanets_dataframe is not None and not exoplanets_dataframe.empty:
     method_counts = exoplanets_dataframe["discovery_method"].value_counts()
     st.bar_chart(method_counts)
 
-    # --- Exoplanet Radius Compared to Earth (0.5 step bins) ---
+    # --- Exoplanet Radius Compared to Earth ---
     st.subheader("Exoplanet Radius Compared to Earth")
     radii = exoplanets_dataframe["radius_earth_radii"].dropna()
     max_radius = min(radii.max(), 35)
@@ -158,7 +158,7 @@ if exoplanets_dataframe is not None and not exoplanets_dataframe.empty:
     st.bar_chart(radius_df.set_index("Bin"))
 
 
-    # --- Host Star Radius Compared to Sun (0.5 step bins) ---
+    # --- Host Star Radius Compared to Sun ---
     st.subheader("Host Star Ratio Compared to Sun")
     star_radii = exoplanets_dataframe["star_radius_solar_radii"].dropna()
     max_star_radius = min(star_radii.max(), 10)
