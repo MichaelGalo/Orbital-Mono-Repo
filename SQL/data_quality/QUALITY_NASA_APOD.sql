@@ -1,4 +1,12 @@
 SELECT
-    * -- intentionally using wildcard due to daily changing schema with 1 row return
+    title,
+    explanation,
+    date,
+    url,
+    hdurl,
+    thumbnail_url,
+    copyright
 FROM STAGED.NASA_APOD
-WHERE title IS NULL;
+WHERE title IS NULL
+    OR explanation IS NULL
+    OR url IS NULL;
