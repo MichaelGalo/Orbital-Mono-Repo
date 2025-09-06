@@ -40,7 +40,7 @@ def test_convert_dateframe_to_parquet():
 def test_preprocess_apod_data():
     test_dataframe = pl.DataFrame({
         'title': ['a'],
-        'date': ['2025-01-01']  # something castable to Date
+        'date': ['2025-01-01'] 
     })
     test_parquet_buffer = convert_dataframe_to_parquet(test_dataframe)
     loaded_dataframe = pl.read_parquet(test_parquet_buffer)

@@ -47,6 +47,15 @@ def ducklake_init(con, data_path, catalog_path):
     con.execute("USE my_ducklake")
     logger.info("DuckLake attached and activated successfully")
 
+def ducklake_attach_GCP_storage(con):
+    logger.info("Configuring GCP Storage settings for DuckLake")
+    gcp_credentials = os.getenv("GCP_SERVICE_ACCOUNT_KEY")
+    if not gcp_credentials or not os.path.exists(gcp_credentials):
+        logger.error("Missing or invalid path to GCP service account JSON")
+        raise FileNotFoundError("GCP service account JSON not found")
+    con.execute(f"SET gs_credentials_file = '{gcp_credentials}'")
+    logger.info("GCP Storage configuration completed")
+
 def ducklake_attach_minio(con):
     logger.info("Configuring MinIO S3 settings")
     con.execute(f"SET s3_access_key_id = '{os.getenv('MINIO_ACCESS_KEY')}'")
