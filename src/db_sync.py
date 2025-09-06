@@ -19,6 +19,8 @@ def db_sync():
     total_start_time = time.time()
     logger.info("Starting Orbital database sync")
     data_path = os.path.join(parent_path, "data")
+    if not os.path.exists(data_path):
+        os.makedirs(data_path)
     catalog_path = os.path.join(parent_path, "catalog.ducklake")
     minio_bucket = os.getenv('MINIO_BUCKET_NAME')
 

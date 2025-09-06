@@ -34,14 +34,15 @@ def pipeline_runner():
     })
 
     nasa_donki_filename = "nasa_donki.parquet"
-    nasa_apod_filename = "nasa_apod.parquet"
     nasa_exoplanets_filename = "nasa_exoplanets.parquet"
     astronaut_filename = "astronauts.parquet"
+    nasa_apod_filename = "nasa_apod.parquet"
 
-    ingest_exoplanets(nasa_exoplanets_filename, minio_bucket)
-    ingest_API_data(nasa_donki_url, nasa_donki_filename, minio_bucket)
     ingest_API_data(nasa_apod_url, nasa_apod_filename, minio_bucket)
+    ingest_API_data(nasa_donki_url, nasa_donki_filename, minio_bucket)
     ingest_API_data(astronaut_url, astronaut_filename, minio_bucket)
+    ingest_exoplanets(nasa_exoplanets_filename, minio_bucket)
+
 
     tock = time.time() - tick
     logger.info(f"Data ingestion completed in {tock:.2f} seconds.")

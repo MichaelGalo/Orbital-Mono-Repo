@@ -194,7 +194,7 @@ def convert_dataframe_to_parquet(dataframe):
         logger.error(f"Failed to convert DataFrame to Parquet in-memory: {e}")
         return None
     
-def process_astronaut_data(astronauts_dataframe):
+def preprocess_astronaut_data(astronauts_dataframe):
         # flatten select columns 
     astronauts_dataframe = astronauts_dataframe.with_columns(
         pl.struct([
@@ -221,3 +221,30 @@ def handle_date_adjustment(from_date, years):
         return result
     except ValueError:
         return from_date.replace(month=2, day=28, year=from_date.year - years)
+    
+
+def preprocess_apod_data(apod_dataframe):
+
+    expected_columns = {
+        "resource": pl.Utf8,
+        "concept_tags": pl.Boolean,
+        "title": pl.Utf8,
+        "date": pl.Date,
+        "url": pl.Utf8,
+        "hdurl": pl.Utf8,
+        "media_type": pl.Utf8,
+        "explanation": pl.Utf8,
+        "concepts": pl.Utf8,
+        "thumbnail_url": pl.Utf8,
+        "service_version": pl.Utf8,
+        "copyright": pl.Utf8
+    }
+
+    for col, dtype in expected_columns.items():
+        if col not in apod_dataframe.columns:
+            apod_dataframe = apod_dataframe.with_columns(pl.lit(None).cast(dtype).alias(col))
+        else:
+            apod_dataframe = apod_dataframe.with_columns(pl.col(col).cast(dtype))
+    
+    result = apod_dataframe.select(list(expected_columns.keys()))
+    return result

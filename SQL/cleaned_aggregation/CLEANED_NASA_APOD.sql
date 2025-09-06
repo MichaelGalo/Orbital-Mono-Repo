@@ -1,4 +1,10 @@
 CREATE OR REPLACE TABLE CLEANED.NASA_APOD AS
 SELECT
-    * -- intentionally using wildcard due to daily changing schema with 1 row return
+    title,
+    explanation,
+    date,
+    url,
+    hdurl,
+    thumbnail_url,
+    copyright
 FROM STAGED.NASA_APOD;
