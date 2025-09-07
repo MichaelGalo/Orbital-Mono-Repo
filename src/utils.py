@@ -7,6 +7,8 @@ import isodate
 import duckdb
 import polars as pl
 from urllib.parse import urlencode
+from google.cloud import storage
+from google.oauth2.service_account import Credentials
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(parent_path)
@@ -47,14 +49,17 @@ def ducklake_init(con, data_path, catalog_path):
     con.execute("USE my_ducklake")
     logger.info("DuckLake attached and activated successfully")
 
+#FIXME: Not working with MacOS Arm. Needs further investigation.
 def ducklake_attach_GCP_storage(con):
-    logger.info("Configuring GCP Storage settings for DuckLake")
-    gcp_credentials = os.getenv("GCP_SERVICE_ACCOUNT_KEY")
-    if not gcp_credentials or not os.path.exists(gcp_credentials):
-        logger.error("Missing or invalid path to GCP service account JSON")
-        raise FileNotFoundError("GCP service account JSON not found")
-    con.execute(f"SET gs_credentials_file = '{gcp_credentials}'")
-    logger.info("GCP Storage configuration completed")
+    try:
+        logger.info("Configuring GCP Storage settings for DuckLake")
+        con.execute("INSTALL gcs;")
+        con.execute("LOAD gcs;")
+        logger.info("GCP Storage configuration for DuckLake completed using ADC")
+    except Exception as e:
+        logger.error(f"Failed to configure DuckLake GCS storage: {e}")
+        raise
+
 
 def ducklake_attach_minio(con):
     logger.info("Configuring MinIO S3 settings")
@@ -77,18 +82,24 @@ def ducklake_refresh(con): # ensures most up to date .parquet is used
     con.execute("CALL ducklake_expire_snapshots('my_ducklake', older_than => now())")
     con.execute("CALL ducklake_cleanup_old_files('my_ducklake', cleanup_all => true)")
 
-def update_data(con, logger, bucket_name, folder_path): # inits db & refreshes on data updates
-    logger.info("Refreshing database with the most current data")
-    file_list_query = f"SELECT * FROM glob('s3://{bucket_name}/{folder_path}/*.parquet')"
+def update_data(con, logger, bucket_name, folder_path, storage_type="s3"):
+    """
+    Refreshes DuckLake catalog tables from parquet files stored in a cloud bucket.
+    storage_type: "s3" (MinIO or AWS) or "gs" (Google Cloud Storage)
+    """
+    if storage_type not in ["s3", "gs"]:
+        raise ValueError("storage_type must be 's3' or 'gs'")
+
+    logger.info(f"Refreshing database with the most current data from {storage_type}://{bucket_name}/{folder_path}")
+
+    file_list_query = f"SELECT * FROM glob('{storage_type}://{bucket_name}/{folder_path}/*.parquet')"
 
     try:
         files_result = con.execute(file_list_query).fetchall()
-        file_paths = []
-        for row in files_result:
-            file_paths.append(row[0])
-        
-        logger.info(f"Found {len(file_paths)} files in MinIO bucket")
-        
+        file_paths = [row[0] for row in files_result]
+
+        logger.info(f"Found {len(file_paths)} files in {storage_type.upper()} bucket")
+
         for file_path in file_paths:
             file_name = os.path.basename(file_path).replace('.parquet', '')
             table_name = file_name.upper().replace('-', '_').replace(' ', '_')
@@ -104,13 +115,14 @@ def update_data(con, logger, bucket_name, folder_path): # inits db & refreshes o
                 ROW_NUMBER() OVER () AS _record_id
             FROM read_parquet('{file_path}');
             """
-            
+
             con.execute(query)
             logger.info(f"Successfully created or updated {folder_path}.{table_name}")
 
     except Exception as e:
-        logger.error(f"Error processing files from MinIO: {e}")
+        logger.error(f"Error processing files from {storage_type.upper()}: {e}")
         raise
+
 
 
 def write_data_to_minio(parquet_buffer, bucket_name, object_name, folder_name=None):
@@ -257,3 +269,33 @@ def preprocess_apod_data(apod_dataframe):
     
     result = apod_dataframe.select(list(expected_columns.keys()))
     return result
+
+def write_data_to_gcs(parquet_buffer, object_name, folder_name= None):
+    """
+    Upload a BytesIO parquet_buffer to a GCS bucket using ADC.
+
+    Args:
+        parquet_buffer (io.BytesIO): Seekable in-memory parquet file
+        object_name (str): File name to store in the bucket
+        folder_name (str, optional): Optional folder inside the bucket
+    """
+    try:
+        # Create client with ADC
+        client = storage.Client(project=(os.getenv("GCP_PROJECT_NAME")))
+        bucket = client.bucket(os.getenv("GCP_BUCKET_NAME"))
+
+        if folder_name:
+            folder_name = folder_name.strip("/")
+            full_object_name = f"{folder_name}/{object_name}"
+        else:
+            full_object_name = object_name
+
+        blob = bucket.blob(full_object_name)
+
+        parquet_buffer.seek(0)
+        blob.upload_from_file(parquet_buffer, content_type="application/x-parquet")
+
+        logger.info(f"Successfully wrote {full_object_name} to bucket.")
+    except Exception as e:
+        logger.error(f"Failed to write {object_name} to bucket: {e}")
+        raise

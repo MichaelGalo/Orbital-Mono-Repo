@@ -38,10 +38,10 @@ def pipeline_runner():
     astronaut_filename = "astronauts.parquet"
     nasa_apod_filename = "nasa_apod.parquet"
 
-    ingest_API_data(nasa_apod_url, nasa_apod_filename, minio_bucket)
-    ingest_API_data(nasa_donki_url, nasa_donki_filename, minio_bucket)
-    ingest_API_data(astronaut_url, astronaut_filename, minio_bucket)
-    ingest_exoplanets(nasa_exoplanets_filename, minio_bucket)
+    ingest_API_data(astronaut_url, astronaut_filename)
+    ingest_API_data(nasa_apod_url, nasa_apod_filename)
+    ingest_API_data(nasa_donki_url, nasa_donki_filename)
+    ingest_exoplanets(nasa_exoplanets_filename)
 
 
     tock = time.time() - tick
@@ -50,12 +50,15 @@ def pipeline_runner():
     logger.info("Synchronizing Data to Database")
     db_sync()    
 
+# if __name__ == "__main__":
+#     pipeline_runner.serve(
+#         name="Pipeline_Runner",
+#         schedule=CronSchedule(
+#             cron="0 1 * * *",
+#             timezone="UTC"
+#         ),
+#         tags=["Pipeline"]
+#     )
+
 if __name__ == "__main__":
-    pipeline_runner.serve(
-        name="Pipeline_Runner",
-        schedule=CronSchedule(
-            cron="0 1 * * *",
-            timezone="UTC"
-        ),
-        tags=["Pipeline"]
-    )
+    pipeline_runner()

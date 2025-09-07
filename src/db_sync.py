@@ -2,7 +2,7 @@ from logger import setup_logging
 import os
 import sys
 import time
-from utils import duckdb_con_init, ducklake_init, ducklake_attach_minio, ducklake_refresh, schema_creation, execute_SQL_file_list, update_data
+from utils import duckdb_con_init, ducklake_init, ducklake_attach_minio, ducklake_refresh, schema_creation, execute_SQL_file_list, update_data, ducklake_attach_GCP_storage
 from data_quality import passed_data_quality_checks
 from dotenv import load_dotenv
 from prefect import task
@@ -26,9 +26,11 @@ def db_sync():
 
     con = duckdb_con_init()
     ducklake_init(con, data_path, catalog_path)
-    ducklake_attach_minio(con)
+    ducklake_attach_GCP_storage(con)
+    # ducklake_attach_minio(con)
     schema_creation(con)
-    update_data(con, logger, minio_bucket, "RAW")
+    # update_data(con, logger, minio_bucket, "RAW")
+    update_data(con, logger, minio_bucket, "RAW", storage_type="gcs")
     ducklake_refresh(con)
 
     staged_queries = [
@@ -62,3 +64,5 @@ def db_sync():
 
     total_end_time = time.time()
     logger.info(f"Database sync completed in {total_end_time - total_start_time:.2f} seconds")
+
+db_sync()
