@@ -51,18 +51,16 @@ def query_confirmed_planets():
         logger.error(f"Query failed: {e}")
 
 @task(name="exoplanet_data_ingestion")
-def ingest_exoplanets(output_file_name, target_bucket):
+def ingest_exoplanets(output_file_name): 
     exoplanets_parquet_buffer = query_confirmed_planets()
     logger.info("Writing Exoplanets Data to Cloud Storage")
-    # write_data_to_minio(exoplanets_parquet_buffer, target_bucket, output_file_name, "RAW")
-    write_data_to_gcs(exoplanets_parquet_buffer, target_bucket, output_file_name, "RAW")
+    write_data_to_gcs(exoplanets_parquet_buffer, output_file_name, "RAW")
 
 
 @task(name="api_data_ingestion")
-def ingest_API_data(API_url, output_file_name): # removed target_bucket paramater for testing
+def ingest_API_data(API_url, output_file_name):
     logger.info("Fetching Data from API")
     api_dataframe = fetch_api_dataframe(API_url)
     api_parquet_buffer = convert_dataframe_to_parquet(api_dataframe)
     logger.info("Writing API Data to Cloud Storage")
-    # write_data_to_minio(api_parquet_buffer, target_bucket, output_file_name, "RAW")
     write_data_to_gcs(api_parquet_buffer, output_file_name, "RAW")

@@ -49,18 +49,6 @@ def ducklake_init(con, data_path, catalog_path):
     con.execute("USE my_ducklake")
     logger.info("DuckLake attached and activated successfully")
 
-#FIXME: Not working with MacOS Arm. Needs further investigation.
-def ducklake_attach_GCP_storage(con):
-    try:
-        logger.info("Configuring GCP Storage settings for DuckLake")
-        con.execute("INSTALL gcs;")
-        con.execute("LOAD gcs;")
-        logger.info("GCP Storage configuration for DuckLake completed using ADC")
-    except Exception as e:
-        logger.error(f"Failed to configure DuckLake GCS storage: {e}")
-        raise
-
-
 def ducklake_attach_minio(con):
     logger.info("Configuring MinIO S3 settings")
     con.execute(f"SET s3_access_key_id = '{os.getenv('MINIO_ACCESS_KEY')}'")
@@ -69,6 +57,16 @@ def ducklake_attach_minio(con):
     con.execute("SET s3_use_ssl = false")
     con.execute("SET s3_url_style = 'path'")
     logger.info("MinIO S3 configuration completed")
+
+def ducklake_attach_gcp(con):
+    logger.info("Configuring GCP settings")
+    con.execute(f"SET s3_access_key_id = '{os.getenv('GCP_ACCESS_KEY')}'")
+    con.execute(f"SET s3_secret_access_key = '{os.getenv('GCP_SECRET_KEY')}'")
+    con.execute(f"SET s3_endpoint = '{os.getenv('GCP_ENDPOINT_URL')}'")
+    # con.execute(f"SET region = 'auto'")
+    con.execute("SET s3_use_ssl = false")
+    con.execute("SET s3_url_style = 'path'")
+    logger.info("GCP configuration completed")
 
 def schema_creation(con):
     logger.info("Creating database schemas")

@@ -2,7 +2,7 @@ from logger import setup_logging
 import os
 import sys
 import time
-from utils import duckdb_con_init, ducklake_init, ducklake_attach_minio, ducklake_refresh, schema_creation, execute_SQL_file_list, update_data, ducklake_attach_GCP_storage
+from utils import duckdb_con_init, ducklake_init, ducklake_attach_minio, ducklake_refresh, schema_creation, execute_SQL_file_list, update_data, ducklake_attach_gcp
 from data_quality import passed_data_quality_checks
 from dotenv import load_dotenv
 from prefect import task
@@ -26,7 +26,7 @@ def db_sync():
 
     con = duckdb_con_init()
     ducklake_init(con, data_path, catalog_path)
-    ducklake_attach_GCP_storage(con)
+    ducklake_attach_gcp(con)
     # ducklake_attach_minio(con)
     schema_creation(con)
     # update_data(con, logger, minio_bucket, "RAW")
