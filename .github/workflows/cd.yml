@@ -3,7 +3,7 @@ name: 'Build and Deploy to Cloud Run'
 on:
   push:
     branches:
-      - main
+      - deployment-staging
 
 env:
   PROJECT_ID: 'adroit-minutia-471316-f1'
