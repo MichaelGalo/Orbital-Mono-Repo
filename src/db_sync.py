@@ -48,7 +48,7 @@ def db_sync():
 
     staged_dir = os.path.join(data_path, "STAGED")
     if os.path.exists(staged_dir):
-        if passed_data_quality_checks() == True: #noqa: E712
+        if passed_data_quality_checks() == True:
             execute_SQL_file_list(con, cleaned_queries)
             ducklake_refresh(con)
         else:
