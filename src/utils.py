@@ -63,8 +63,7 @@ def ducklake_attach_gcp(con):
     con.execute(f"SET s3_access_key_id = '{os.getenv('GCP_ACCESS_KEY')}'")
     con.execute(f"SET s3_secret_access_key = '{os.getenv('GCP_SECRET_KEY')}'")
     con.execute(f"SET s3_endpoint = '{os.getenv('GCP_ENDPOINT_URL')}'")
-    # con.execute(f"SET region = 'auto'")
-    con.execute("SET s3_use_ssl = false")
+    con.execute("SET s3_use_ssl = true")
     con.execute("SET s3_url_style = 'path'")
     logger.info("GCP configuration completed")
 

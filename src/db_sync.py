@@ -23,14 +23,14 @@ def db_sync():
         os.makedirs(data_path)
     catalog_path = os.path.join(parent_path, "catalog.ducklake")
     minio_bucket = os.getenv('MINIO_BUCKET_NAME')
+    gcp_bucket = os.getenv('GCP_BUCKET_NAME')
 
     con = duckdb_con_init()
     ducklake_init(con, data_path, catalog_path)
     ducklake_attach_gcp(con)
     # ducklake_attach_minio(con)
     schema_creation(con)
-    # update_data(con, logger, minio_bucket, "RAW")
-    update_data(con, logger, minio_bucket, "RAW", storage_type="gcs")
+    update_data(con, logger, gcp_bucket, "RAW", storage_type="s3")
     ducklake_refresh(con)
 
     staged_queries = [
