@@ -167,26 +167,27 @@ def add_query_params(base_url, params):
 def iso_to_human(iso_str):
     duration = isodate.parse_duration(iso_str)
     total_seconds = int(duration.total_seconds())
-    days, remainder = divmod(total_seconds, 86400)
-    hours, remainder = divmod(remainder, 3600)
-    minutes, seconds = divmod(remainder, 60)
-
+    days_count, remainder_seconds = divmod(total_seconds, 86400)
+    hours_count, remainder_seconds = divmod(remainder_seconds, 3600)
+    minutes_count, seconds_count = divmod(remainder_seconds, 60)
     parts = []
-
-    match (days, hours, minutes, seconds):
-        case (days_value, hours_value, minutes_value, seconds_value) if days_value > 0:
-            parts.append(f"{days_value} days")
-        case (days_value, hours_value, minutes_value, seconds_value) if hours_value > 0:
-            parts.append(f"{hours_value} hours")
-        case (days_value, hours_value, minutes_value, seconds_value) if minutes_value > 0:
-            parts.append(f"{minutes_value} minutes")
-        case (days_value, hours_value, minutes_value, seconds_value) if seconds_value > 0:
-            parts.append(f"{seconds_value} seconds")
-        case _:
-            parts.append("0 seconds")
-
-    result =  ", ".join(parts)
+    match days_count:
+        case days_present if days_present > 0:
+            parts.append(f"{days_present} days")
+    match hours_count:
+        case hours_present if hours_present > 0:
+            parts.append(f"{hours_present} hours")
+    match minutes_count:
+        case minutes_present if minutes_present > 0:
+            parts.append(f"{minutes_present} minutes")
+    match seconds_count:
+        case seconds_present if seconds_present > 0:
+            parts.append(f"{seconds_present} seconds")
+    if not parts:
+        parts.append("0 seconds")
+    result = ", ".join(parts)
     return result
+
 
 def convert_dataframe_to_parquet(dataframe):
     buffer = io.BytesIO()
