@@ -2,7 +2,7 @@ from logger import setup_logging
 import os
 import sys
 import time
-from utils import duckdb_con_init, ducklake_init, ducklake_attach_minio, ducklake_refresh, schema_creation, execute_SQL_file_list, update_data, ducklake_attach_gcp
+from utils import duckdb_con_init, ducklake_init, ducklake_refresh, schema_creation, execute_SQL_file_list, update_data, ducklake_attach_gcp
 from data_quality import passed_data_quality_checks
 from dotenv import load_dotenv
 from prefect import task
@@ -22,13 +22,11 @@ def db_sync():
     if not os.path.exists(data_path):
         os.makedirs(data_path)
     catalog_path = os.path.join(parent_path, "catalog.ducklake")
-    minio_bucket = os.getenv('MINIO_BUCKET_NAME')
     gcp_bucket = os.getenv('GCP_BUCKET_NAME')
 
     con = duckdb_con_init()
     ducklake_init(con, data_path, catalog_path)
     ducklake_attach_gcp(con)
-    # ducklake_attach_minio(con)
     schema_creation(con)
     update_data(con, logger, gcp_bucket, "RAW", storage_type="s3")
     ducklake_refresh(con)
@@ -64,5 +62,3 @@ def db_sync():
 
     total_end_time = time.time()
     logger.info(f"Database sync completed in {total_end_time - total_start_time:.2f} seconds")
-
-db_sync()

@@ -8,7 +8,6 @@ import duckdb
 import polars as pl
 from urllib.parse import urlencode
 from google.cloud import storage
-from google.oauth2.service_account import Credentials
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(parent_path)

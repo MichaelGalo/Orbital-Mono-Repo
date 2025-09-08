@@ -17,7 +17,6 @@ def pipeline_runner():
     today = datetime.now(timezone.utc).date()
     start_date = handle_date_adjustment(today, years=5).strftime("%Y-%m-%d")
     end_date = today.strftime("%Y-%m-%d")
-    # minio_bucket = os.getenv("MINIO_BUCKET_NAME")
 
     nasa_donki_url = add_query_params(os.getenv("NASA_DONKI_API"), {
         "startDate": start_date,

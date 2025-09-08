@@ -1,4 +1,4 @@
-from utils import write_data_to_minio, preprocess_astronaut_data, convert_dataframe_to_parquet, preprocess_apod_data, write_data_to_gcs
+from utils import preprocess_astronaut_data, convert_dataframe_to_parquet, preprocess_apod_data, write_data_to_gcs
 from logger import setup_logging
 import time
 import os
