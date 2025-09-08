@@ -1,7 +1,7 @@
 from logger import setup_logging
 import os
 import sys
-from utils import duckdb_con_init, ducklake_init, ducklake_refresh, schema_creation, execute_SQL_file_list, update_data, ducklake_attach_gcp
+from utils import duckdb_con_init, ducklake_init, ducklake_refresh, execute_SQL_file_list, update_data, ducklake_attach_gcp
 from data_quality import passed_data_quality_checks
 from dotenv import load_dotenv
 from prefect import task
@@ -16,16 +16,14 @@ logger = setup_logging()
 @task(name="database_sync")
 def db_sync():
     logger.info("Starting Orbital database sync")
-    data_path = os.path.join(parent_path, "data")
-    if not os.path.exists(data_path):
-        os.makedirs(data_path)
-    catalog_path = os.path.join(parent_path, "catalog.ducklake")
     gcp_bucket = os.getenv('GCP_BUCKET_NAME')
+    data_path = f"gs://{gcp_bucket}/CATALOG_DATA_SNAPSHOTS"
+    catalog_path = f"gs://{gcp_bucket}/CATALOG"
 
     con = duckdb_con_init()
     ducklake_init(con, data_path, catalog_path)
     ducklake_attach_gcp(con)
-    update_data(con, logger, gcp_bucket, "RAW", storage_type="s3")
+    update_data(con, logger, gcp_bucket, "RAW_DATA", storage_type="s3")
     ducklake_refresh(con)
 
     staged_queries = [

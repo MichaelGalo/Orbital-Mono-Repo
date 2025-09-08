@@ -52,7 +52,7 @@ def query_confirmed_planets():
 def ingest_exoplanets(output_file_name): 
     exoplanets_parquet_buffer = query_confirmed_planets()
     logger.info("Writing Exoplanets Data to Cloud Storage")
-    write_data_to_gcs(exoplanets_parquet_buffer, output_file_name, "RAW")
+    write_data_to_gcs(exoplanets_parquet_buffer, output_file_name, "RAW_DATA")
 
 
 @task(name="api_data_ingestion")
@@ -61,4 +61,4 @@ def ingest_API_data(API_url, output_file_name):
     api_dataframe = fetch_api_dataframe(API_url)
     api_parquet_buffer = convert_dataframe_to_parquet(api_dataframe)
     logger.info("Writing API Data to Cloud Storage")
-    write_data_to_gcs(api_parquet_buffer, output_file_name, "RAW")
+    write_data_to_gcs(api_parquet_buffer, output_file_name, "RAW_DATA")
