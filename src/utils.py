@@ -68,6 +68,7 @@ def ducklake_attach_gcp(con):
 
 def schema_creation(con):
     logger.info("Creating database schemas")
+    con.execute("CREATE SCHEMA IF NOT EXISTS RAW_DATA")
     con.execute("CREATE SCHEMA IF NOT EXISTS RAW")
     con.execute("CREATE SCHEMA IF NOT EXISTS STAGED")
     con.execute("CREATE SCHEMA IF NOT EXISTS CLEANED")

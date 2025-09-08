@@ -7,7 +7,7 @@ SELECT
     hdurl,
     thumbnail_url,
     copyright
-FROM RAW.NASA_APOD
+FROM RAW_DATA.NASA_APOD
 WHERE date IS NOT NULL
     AND title IS NOT NULL
     AND url IS NOT NULL
