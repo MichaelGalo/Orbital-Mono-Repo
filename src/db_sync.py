@@ -1,7 +1,7 @@
 from logger import setup_logging
 import os
 import sys
-from utils import duckdb_con_init, ducklake_init, ducklake_refresh, execute_SQL_file_list, update_data, ducklake_attach_gcp
+from utils import duckdb_con_init, ducklake_init, ducklake_refresh, execute_SQL_file_list, update_data, ducklake_attach_gcp, gcs_path_exists
 from data_quality import passed_data_quality_checks
 from dotenv import load_dotenv
 from prefect import task
@@ -23,7 +23,7 @@ def db_sync():
     con = duckdb_con_init()
     ducklake_init(con, data_path, catalog_path)
     ducklake_attach_gcp(con)
-    # update_data(con, logger, gcp_bucket, "RAW_DATA", storage_type="s3")
+    update_data(con, logger, gcp_bucket, "RAW_DATA", storage_type="s3")
     ducklake_refresh(con)
 
     staged_queries = [
@@ -43,10 +43,9 @@ def db_sync():
     execute_SQL_file_list(con, staged_queries)
     ducklake_refresh(con)
 
-    #FIXME: staged directory doesn't exists yet in GCS, so this check always fails
-    staged_dir = os.path.join(data_path, "STAGED")
-    if os.path.exists(staged_dir):
-        if passed_data_quality_checks() == True:
+    staged_dir = f"gs://{gcp_bucket}/CATALOG_DATA_SNAPSHOTS/STAGED"
+    if gcs_path_exists(staged_dir):
+        if passed_data_quality_checks():
             execute_SQL_file_list(con, cleaned_queries)
             ducklake_refresh(con)
         else:
@@ -56,5 +55,3 @@ def db_sync():
     con.close()
     logger.info("Database connection closed")
     logger.info("Database sync completed")
-
-db_sync()

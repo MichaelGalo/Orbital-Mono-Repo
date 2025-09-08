@@ -8,11 +8,22 @@ import duckdb
 import polars as pl
 from urllib.parse import urlencode
 from google.cloud import storage
+import gcsfs
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(parent_path)
 
 logger = setup_logging()
+
+def gcs_path_exists(gcs_path):
+    try:
+        logger.info(f"Checking existence of GCS path: {gcs_path}")
+        gcs_filesystem = gcsfs.GCSFileSystem()
+        path_exists = gcs_filesystem.exists(gcs_path)
+        return path_exists
+    except Exception as e:
+        logger.error(f"Error checking GCS path existence: {e}")
+        return False
 
 def execute_SQL_file_list(con, list_of_file_paths):
     for file_path in list_of_file_paths:
