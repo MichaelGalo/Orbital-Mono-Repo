@@ -1,8 +1,8 @@
 
-from data_ingestion import ingest_API_data, ingest_exoplanets
-from utils import add_query_params, handle_date_adjustment
-from logger import setup_logging
-from db_sync import db_sync
+from src.data_ingestion import ingest_API_data, ingest_exoplanets
+from src.utils import add_query_params, handle_date_adjustment
+from src.logger import setup_logging
+from src.db_sync import db_sync
 from datetime import datetime, timezone
 import os
 import time

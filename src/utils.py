@@ -1,6 +1,5 @@
 from minio import Minio
-from logger import setup_logging
-import sys
+from src.logger import setup_logging
 import os
 import io
 import isodate
@@ -11,7 +10,6 @@ from google.cloud import storage
 import gcsfs
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
-sys.path.append(parent_path)
 
 logger = setup_logging()
 

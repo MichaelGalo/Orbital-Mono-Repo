@@ -1,11 +1,10 @@
 import os
 import sys
-from logger import setup_logging
-from utils import duckdb_con_init, ducklake_init, ducklake_attach_minio, schema_creation
+from src.logger import setup_logging
+from src.utils import duckdb_con_init, ducklake_init, ducklake_attach_minio, schema_creation
 from dotenv import load_dotenv
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
-sys.path.append(parent_path)
 
 load_dotenv()
 logger = setup_logging()

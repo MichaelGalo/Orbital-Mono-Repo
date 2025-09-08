@@ -1,13 +1,11 @@
-from logger import setup_logging
+from src.logger import setup_logging
 import os
-import sys
-from utils import duckdb_con_init, ducklake_init, ducklake_refresh, execute_SQL_file_list, update_data, ducklake_attach_gcp, gcs_path_exists
-from data_quality import passed_data_quality_checks
+from src.utils import duckdb_con_init, ducklake_init, ducklake_refresh, execute_SQL_file_list, update_data, ducklake_attach_gcp, gcs_path_exists
+from src.data_quality import passed_data_quality_checks
 from dotenv import load_dotenv
 from prefect import task
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
-sys.path.append(parent_path)
 
 load_dotenv()
 
