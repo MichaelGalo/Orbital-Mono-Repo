@@ -25,7 +25,6 @@ def db_sync():
     con = duckdb_con_init()
     ducklake_init(con, data_path, catalog_path)
     ducklake_attach_gcp(con)
-    schema_creation(con)
     update_data(con, logger, gcp_bucket, "RAW", storage_type="s3")
     ducklake_refresh(con)
 

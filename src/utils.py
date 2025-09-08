@@ -182,22 +182,27 @@ def add_query_params(base_url, params):
     return result
 
 def iso_to_human(iso_str):
-    dur = isodate.parse_duration(iso_str)
-    total_seconds = int(dur.total_seconds())
-    days, rem = divmod(total_seconds, 86400)
-    hours, rem = divmod(rem, 3600)
-    minutes, seconds = divmod(rem, 60)
-
+    duration = isodate.parse_duration(iso_str)
+    total_seconds = int(duration.total_seconds())
+    days_count, remainder_seconds = divmod(total_seconds, 86400)
+    hours_count, remainder_seconds = divmod(remainder_seconds, 3600)
+    minutes_count, seconds_count = divmod(remainder_seconds, 60)
     parts = []
-    if days:
-        parts.append(f"{days} days")
-    if hours:
-        parts.append(f"{hours} hours")
-    if minutes:
-        parts.append(f"{minutes} minutes")
-    if seconds:
-        parts.append(f"{seconds} seconds")
-    result = ", ".join(parts) if parts else "0 seconds"
+    match days_count:
+        case days_present if days_present > 0:
+            parts.append(f"{days_present} days")
+    match hours_count:
+        case hours_present if hours_present > 0:
+            parts.append(f"{hours_present} hours")
+    match minutes_count:
+        case minutes_present if minutes_present > 0:
+            parts.append(f"{minutes_present} minutes")
+    match seconds_count:
+        case seconds_present if seconds_present > 0:
+            parts.append(f"{seconds_present} seconds")
+    if not parts:
+        parts.append("0 seconds")
+    result = ", ".join(parts)
     return result
 
 def convert_dataframe_to_parquet(dataframe):

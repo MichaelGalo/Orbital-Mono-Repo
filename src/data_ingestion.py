@@ -21,13 +21,11 @@ def fetch_api_dataframe(base_url):
     if astro_base_url not in base_url and apod_base_url not in base_url:
         result = pl.DataFrame(data)
         return result
-    
-    if astro_base_url in base_url:
+    elif astro_base_url in base_url:
         astronauts_dataframe = pl.DataFrame(data["results"])
         processed_astronaut_dataframe = preprocess_astronaut_data(astronauts_dataframe)
         result = processed_astronaut_dataframe
         return result
-    
     else:
         apod_dataframe = pl.DataFrame(data)
         preprocessed_apod_dataframe = preprocess_apod_data(apod_dataframe)
