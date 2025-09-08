@@ -1,5 +1,4 @@
 import os
-import sys
 from src.logger import setup_logging
 from src.utils import duckdb_con_init, ducklake_init, ducklake_attach_minio, schema_creation
 from dotenv import load_dotenv
