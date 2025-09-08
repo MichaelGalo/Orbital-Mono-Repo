@@ -1,7 +1,6 @@
 from logger import setup_logging
 import os
 import sys
-import time
 from utils import duckdb_con_init, ducklake_init, ducklake_refresh, schema_creation, execute_SQL_file_list, update_data, ducklake_attach_gcp
 from data_quality import passed_data_quality_checks
 from dotenv import load_dotenv
@@ -16,7 +15,6 @@ logger = setup_logging()
 
 @task(name="database_sync")
 def db_sync():
-    total_start_time = time.time()
     logger.info("Starting Orbital database sync")
     data_path = os.path.join(parent_path, "data")
     if not os.path.exists(data_path):
@@ -50,7 +48,7 @@ def db_sync():
 
     staged_dir = os.path.join(data_path, "STAGED")
     if os.path.exists(staged_dir):
-        if passed_data_quality_checks():
+        if passed_data_quality_checks() == True: #noqa: E712
             execute_SQL_file_list(con, cleaned_queries)
             ducklake_refresh(con)
         else:
@@ -59,6 +57,4 @@ def db_sync():
     
     con.close()
     logger.info("Database connection closed")
-
-    total_end_time = time.time()
-    logger.info(f"Database sync completed in {total_end_time - total_start_time:.2f} seconds")
+    logger.info("Database sync completed")
