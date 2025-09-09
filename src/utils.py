@@ -1,17 +1,27 @@
 from minio import Minio
-from logger import setup_logging
-import sys
+from src.logger import setup_logging
 import os
 import io
 import isodate
 import duckdb
 import polars as pl
 from urllib.parse import urlencode
+from google.cloud import storage
+import gcsfs
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
-sys.path.append(parent_path)
 
 logger = setup_logging()
+
+def gcs_path_exists(gcs_path):
+    try:
+        logger.info(f"Checking existence of GCS path: {gcs_path}")
+        gcs_filesystem = gcsfs.GCSFileSystem()
+        path_exists = gcs_filesystem.exists(gcs_path)
+        return path_exists
+    except Exception as e:
+        logger.error(f"Error checking GCS path existence: {e}")
+        return False
 
 def execute_SQL_file_list(con, list_of_file_paths):
     for file_path in list_of_file_paths:
@@ -56,8 +66,18 @@ def ducklake_attach_minio(con):
     con.execute("SET s3_url_style = 'path'")
     logger.info("MinIO S3 configuration completed")
 
+def ducklake_attach_gcp(con):
+    logger.info("Configuring GCP settings")
+    con.execute(f"SET s3_access_key_id = '{os.getenv('GCP_ACCESS_KEY')}'")
+    con.execute(f"SET s3_secret_access_key = '{os.getenv('GCP_SECRET_KEY')}'")
+    con.execute(f"SET s3_endpoint = '{os.getenv('GCP_ENDPOINT_URL')}'")
+    con.execute("SET s3_use_ssl = true")
+    con.execute("SET s3_url_style = 'path'")
+    logger.info("GCP configuration completed")
+
 def schema_creation(con):
     logger.info("Creating database schemas")
+    con.execute("CREATE SCHEMA IF NOT EXISTS RAW_DATA")
     con.execute("CREATE SCHEMA IF NOT EXISTS RAW")
     con.execute("CREATE SCHEMA IF NOT EXISTS STAGED")
     con.execute("CREATE SCHEMA IF NOT EXISTS CLEANED")
@@ -68,18 +88,24 @@ def ducklake_refresh(con): # ensures most up to date .parquet is used
     con.execute("CALL ducklake_expire_snapshots('my_ducklake', older_than => now())")
     con.execute("CALL ducklake_cleanup_old_files('my_ducklake', cleanup_all => true)")
 
-def update_data(con, logger, bucket_name, folder_path): # inits db & refreshes on data updates
-    logger.info("Refreshing database with the most current data")
-    file_list_query = f"SELECT * FROM glob('s3://{bucket_name}/{folder_path}/*.parquet')"
+def update_data(con, logger, bucket_name, folder_path, storage_type="s3"):
+    """
+    Refreshes DuckLake catalog tables from parquet files stored in a cloud bucket.
+    storage_type: "s3" (MinIO or AWS) or "gs" (Google Cloud Storage)
+    """
+    if storage_type not in ["s3", "gs"]:
+        raise ValueError("storage_type must be 's3' or 'gs'")
+
+    logger.info(f"Refreshing database with the most current data from {storage_type}://{bucket_name}/{folder_path}")
+
+    file_list_query = f"SELECT * FROM glob('{storage_type}://{bucket_name}/{folder_path}/*.parquet')"
 
     try:
         files_result = con.execute(file_list_query).fetchall()
-        file_paths = []
-        for row in files_result:
-            file_paths.append(row[0])
-        
-        logger.info(f"Found {len(file_paths)} files in MinIO bucket")
-        
+        file_paths = [row[0] for row in files_result]
+
+        logger.info(f"Found {len(file_paths)} files in {storage_type.upper()} bucket")
+
         for file_path in file_paths:
             file_name = os.path.basename(file_path).replace('.parquet', '')
             table_name = file_name.upper().replace('-', '_').replace(' ', '_')
@@ -95,13 +121,14 @@ def update_data(con, logger, bucket_name, folder_path): # inits db & refreshes o
                 ROW_NUMBER() OVER () AS _record_id
             FROM read_parquet('{file_path}');
             """
-            
+
             con.execute(query)
             logger.info(f"Successfully created or updated {folder_path}.{table_name}")
 
     except Exception as e:
-        logger.error(f"Error processing files from MinIO: {e}")
+        logger.error(f"Error processing files from {storage_type.upper()}: {e}")
         raise
+
 
 
 def write_data_to_minio(parquet_buffer, bucket_name, object_name, folder_name=None):
@@ -254,3 +281,33 @@ def preprocess_apod_data(apod_dataframe):
     
     result = apod_dataframe.select(list(expected_columns.keys()))
     return result
+
+def write_data_to_gcs(parquet_buffer, object_name, folder_name= None):
+    """
+    Upload a BytesIO parquet_buffer to a GCS bucket using ADC.
+
+    Args:
+        parquet_buffer (io.BytesIO): Seekable in-memory parquet file
+        object_name (str): File name to store in the bucket
+        folder_name (str, optional): Optional folder inside the bucket
+    """
+    try:
+        # Create client with ADC
+        client = storage.Client(project=(os.getenv("GCP_PROJECT_NAME")))
+        bucket = client.bucket(os.getenv("GCP_BUCKET_NAME"))
+
+        if folder_name:
+            folder_name = folder_name.strip("/")
+            full_object_name = f"{folder_name}/{object_name}"
+        else:
+            full_object_name = object_name
+
+        blob = bucket.blob(full_object_name)
+
+        parquet_buffer.seek(0)
+        blob.upload_from_file(parquet_buffer, content_type="application/x-parquet")
+
+        logger.info(f"Successfully wrote {full_object_name} to bucket.")
+    except Exception as e:
+        logger.error(f"Failed to write {object_name} to bucket: {e}")
+        raise

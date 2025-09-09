@@ -1,11 +1,6 @@
-import os
-import sys
 import polars as pl
 from datetime import datetime
-from utils import add_query_params, iso_to_human, handle_date_adjustment, convert_dataframe_to_parquet, preprocess_apod_data
-current_path = os.path.dirname(os.path.abspath(__file__))
-parent_path = os.path.abspath(os.path.join(current_path, "src"))
-sys.path.append(parent_path)
+from src.utils import add_query_params, iso_to_human, handle_date_adjustment, convert_dataframe_to_parquet, preprocess_apod_data
 
 def test_add_query_params():
     url = "https://example.com"
@@ -40,7 +35,7 @@ def test_convert_dateframe_to_parquet():
 def test_preprocess_apod_data():
     test_dataframe = pl.DataFrame({
         'title': ['a'],
-        'date': ['2025-01-01']  # something castable to Date
+        'date': ['2025-01-01'] 
     })
     test_parquet_buffer = convert_dataframe_to_parquet(test_dataframe)
     loaded_dataframe = pl.read_parquet(test_parquet_buffer)

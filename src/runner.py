@@ -1,8 +1,8 @@
 
-from data_ingestion import ingest_API_data, ingest_exoplanets
-from utils import add_query_params, handle_date_adjustment
-from logger import setup_logging
-from db_sync import db_sync
+from src.data_ingestion import ingest_API_data, ingest_exoplanets
+from src.utils import add_query_params, handle_date_adjustment
+from src.logger import setup_logging
+from src.db_sync import db_sync
 from datetime import datetime, timezone
 import os
 import time
@@ -17,7 +17,6 @@ def pipeline_runner():
     today = datetime.now(timezone.utc).date()
     start_date = handle_date_adjustment(today, years=5).strftime("%Y-%m-%d")
     end_date = today.strftime("%Y-%m-%d")
-    minio_bucket = os.getenv("MINIO_BUCKET_NAME")
 
     nasa_donki_url = add_query_params(os.getenv("NASA_DONKI_API"), {
         "startDate": start_date,
@@ -38,10 +37,10 @@ def pipeline_runner():
     astronaut_filename = "astronauts.parquet"
     nasa_apod_filename = "nasa_apod.parquet"
 
-    ingest_API_data(nasa_apod_url, nasa_apod_filename, minio_bucket)
-    ingest_API_data(nasa_donki_url, nasa_donki_filename, minio_bucket)
-    ingest_API_data(astronaut_url, astronaut_filename, minio_bucket)
-    ingest_exoplanets(nasa_exoplanets_filename, minio_bucket)
+    ingest_API_data(astronaut_url, astronaut_filename)
+    ingest_API_data(nasa_apod_url, nasa_apod_filename)
+    ingest_API_data(nasa_donki_url, nasa_donki_filename)
+    ingest_exoplanets(nasa_exoplanets_filename)
 
 
     tock = time.time() - tick

@@ -1,14 +1,10 @@
-from fastapi import HTTPException
+from src.utils import duckdb_con_init, ducklake_init, ducklake_attach_gcp
 from src.logger import setup_logging
+from fastapi import HTTPException
 import os
-import sys
-import duckdb
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
-sys.path.append(parent_path)
-
 logger = setup_logging()
-
 
 DATASET_CONFIG = {
     1: {
@@ -37,18 +33,14 @@ def fetch_single_dataset(dataset_id, offset, limit):
         
         dataset = DATASET_CONFIG[dataset_id]
         logger.info(f"Using dataset: {dataset['table_name']}")
-        
-        duckdb.install_extension("ducklake")
-        con = duckdb.connect(':memory:')
-        logger.info("Connected to in-memory DuckDB database")
 
-        data_path = os.path.join(parent_path, "data")
+        gcp_bucket = os.getenv('GCP_BUCKET_NAME')
+        data_path = f"gs://{gcp_bucket}/CATALOG_DATA_SNAPSHOTS"
         catalog_path = os.path.join(parent_path, "catalog.ducklake")
-
-        logger.info(f"Attaching DuckLake with data path: {data_path}")
-        con.execute(f"ATTACH 'ducklake:{catalog_path}' AS my_ducklake (DATA_PATH '{data_path}')")
-        con.execute("USE my_ducklake")
-        logger.info("DuckLake attached and activated successfully")
+        
+        con = duckdb_con_init()
+        ducklake_init(con, data_path, catalog_path)
+        ducklake_attach_gcp(con)
 
         # Use a fully parameterized query
         query = f"""
