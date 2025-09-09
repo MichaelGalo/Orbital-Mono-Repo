@@ -14,7 +14,7 @@ COPY pyproject.toml ./
 
 RUN pip install --upgrade pip \
     && pip install uv \
-    && uv install  # <-- installs dependencies based on pyproject.toml, no uv.lock needed
+    && uv sync --locked
 
 COPY . .
 
