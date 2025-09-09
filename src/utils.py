@@ -215,6 +215,7 @@ def iso_to_human(iso_str):
     result = ", ".join(parts)
     return result
 
+
 def convert_dataframe_to_parquet(dataframe):
     buffer = io.BytesIO()
     try:
