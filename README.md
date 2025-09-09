@@ -110,7 +110,7 @@ Typical flow: ingest -> store -> standardize/transform -> quality test -> clean 
 
 5. **Run the Prefect flow**:
    ```bash
-   uv run src/runner.py
+   uv run -m src.runner
    ```
 
 6. **Start the FastAPI server**:
