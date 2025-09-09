@@ -54,4 +54,4 @@ jobs:
         with:
           service: '${{ env.SERVICE }}'
           region: '${{ env.REGION }}'
-          image: "$DOCKER_TAG"
+          image: '${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/orbital-data-pipeline:${{ github.sha }}'
