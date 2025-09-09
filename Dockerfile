@@ -19,4 +19,4 @@ COPY . .
 
 EXPOSE 8080
 
-CMD ["uv", "run", "src/runner.py"]
+CMD ["sh", "-c", "uv run src/runner.py --host 0.0.0.0 --port ${PORT:-8080}"]
