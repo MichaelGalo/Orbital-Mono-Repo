@@ -14,7 +14,6 @@ Orbital, simplifying the astronomical.
 - [Data Schemas](#data-schemas)
 - [Running the project locally](#running-the-project-locally)
 
-
 ## Overview
 
 This project is a production-minded capstone that ingests public datasets related to Space Exploration, validates and standardizes them, and exposes clean, analysis/web-ready tables for downstream use. The primary goals are:
@@ -29,19 +28,19 @@ The repository contains pipeline scripts, utilities, orchestration, API, and whe
 
 ## Data Sources
 
-- Astronaut Data:The Space Devs Launch Library 2 API
+- Astronaut Data: The Space Devs Launch Library 2 API
 - Exoplanet Data: Astroquery SDK (Community maintained access to NASA's Exoplanet Database)
 - Space Weather Notifications: NASA DONKI (Database of Notifications, Knowledge and Information) API
 - Hero Image: NASA APOD (Astronomy Picture of the Day) API
 
 ## Features
 
-- MinIO data lake for storage (easily adapted to S3)
+- Google Cloud Storage (GCS) data lake for object storage
 - Layered medallion catalog architecture (Raw → Staged → Clean)
 - File-based analytics using DuckDB and DuckLake for fast queries
 - Lightweight pipeline scripts for ingestion, quality checks, and lakehouse catalog sync
 - REST API programmatic data access for serving cleaned data
-- Data Quality Tests with custom python & SQL
+- Data Quality Tests with custom Python & SQL
 - Unit tests with pytest and structured logging
 - Orchestration with Prefect for daily updated data
 
@@ -53,7 +52,7 @@ The repository contains pipeline scripts, utilities, orchestration, API, and whe
 
 | Category | Technology | Purpose |
 |----------|------------|---------|
-| **Object Storage** | ![MinIO](https://img.shields.io/badge/MinIO-C72E49?style=flat-square&logo=minio&logoColor=white) | S3-compatible staging storage |
+| **Object Storage** | ![GCS](https://img.shields.io/badge/Google_Cloud_Storage-4285F4?style=flat-square&logo=googlecloud&logoColor=white) | Cloud-based storage for raw, staged, and cleaned data |
 | **Data Lakehouse** | ![Ducklake](https://img.shields.io/badge/Ducklake-2E7D32?style=flat-square&logo=duckdb&logoColor=white) | Data lakehouse Catalog |
 | **Database Operations** | ![DuckDB](https://img.shields.io/badge/DuckDB-FF6F00?style=flat-square&logo=duckdb&logoColor=white) | Analytical database for operations and querying |
 | **Programming & Utilities** | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | Data ingestion, utilities, and scripting |
@@ -69,24 +68,25 @@ The repository contains pipeline scripts, utilities, orchestration, API, and whe
 This project follows a medallion architecture with three primary layers:
 
 - Raw (Bronze)
-	- Immutable ingested data as originally fetched from APIs that are time-stamped
-	- Stored in MinIO with catalog .parquet stored in `data/RAW/`
+   - Immutable ingested data as originally fetched from APIs that are time-stamped
+   - Stored in GCS in `/RAW_DATA/`
+    - Ducklake Catalog .parquet files stored in `CATALOG_DATA_SNAPSHOTS/RAW_DATA/`
 
 - Staged (Silver)
-	- Standardized and validated records, ready for transformation
-	- Stored in `data/STAGED/`
+   - Standardized and validated records, ready for transformation
+   - Ducklake Catalog .parquet files stored in `CATALOG_DATA_SNAPSHOTS/STAGED/`
 
 - Cleaned (Gold)
-	- Business-ready, deduplicated tables suitable for analytics or web services
-	- Stored in `data/CLEANED/`
+   - Business-ready, deduplicated tables suitable for analytics or web services
+   - Ducklake Catalog .parquet files stored in `CATALOG_DATA_SNAPSHOTS/CLEANED/`
 
-Typical flow: ingest -> standardize/transform -> quality test -> clean -> serve
+Typical flow: ingest -> store -> standardize/transform -> quality test -> clean -> serve
 
 ## Running the Project Locally
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/your-repo.git
+   git clone https://github.com/MichaelGalo/Orbital-Data-Pipeline.git
    cd your-repo
    ```
 
@@ -96,17 +96,21 @@ Typical flow: ingest -> standardize/transform -> quality test -> clean -> serve
    uv sync
    ```
 
-3. **Setup MinIO**:
-	```bash
-	docker compose up -d
-	```
+3. **Set up your Google Cloud Storage**:
+- Add environmental variables that will connect your GCS after creating a storage permissions service account.
+    ```bash
+    GCP_BUCKET_NAME=your-bucket-name
+    GCP_PROJECT_NAME=project-name-id
+    GCP_ACCESS_KEY=your-access-key
+    GCP_SECRET_KEY=your-secret-key
+    GCP_ENDPOINT_URL=storage.googleapis.com
+    ```
 
-4. **Create MinIO Bucket**:
-	- Create a bucket called `orbital`
+4. **Ensure other .env variables are present for URL endpoints & API keys**
 
 5. **Run the Prefect flow**:
    ```bash
-   uv run src/runner.py
+   uv run -m src.runner
    ```
 
 6. **Start the FastAPI server**:
