@@ -20,6 +20,7 @@ from .utils import (
     handle_date_adjustment,
     preprocess_apod_data,
     write_data_to_gcs,
+    update_catalog_to_gcs
 )
 
 __all__ = [
@@ -47,4 +48,5 @@ __all__ = [
     "handle_date_adjustment",
     "preprocess_apod_data",
     "write_data_to_gcs",
+    "update_catalog_to_gcs"
 ]

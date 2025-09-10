@@ -1,6 +1,6 @@
 from src.logger import setup_logging
 import os
-from src.utils import duckdb_con_init, ducklake_init, ducklake_refresh, execute_SQL_file_list, update_data, ducklake_attach_gcp, gcs_path_exists
+from src.utils import duckdb_con_init, ducklake_init, ducklake_refresh, execute_SQL_file_list, update_data, ducklake_attach_gcp, gcs_path_exists, update_catalog_to_gcs
 from src.data_quality import passed_data_quality_checks
 from dotenv import load_dotenv
 from prefect import task
@@ -52,4 +52,5 @@ def db_sync():
     
     con.close()
     logger.info("Database connection closed")
+    update_catalog_to_gcs(gcp_bucket,catalog_path)
     logger.info("Database sync completed")

@@ -8,6 +8,8 @@ import polars as pl
 from urllib.parse import urlencode
 from google.cloud import storage
 import gcsfs
+from dotenv import load_dotenv
+load_dotenv()
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
 
@@ -87,6 +89,13 @@ def ducklake_refresh(con): # ensures most up to date .parquet is used
     logger.info("Refreshing DuckLake metadata to most up-to-date")
     con.execute("CALL ducklake_expire_snapshots('my_ducklake', older_than => now())")
     con.execute("CALL ducklake_cleanup_old_files('my_ducklake', cleanup_all => true)")
+
+def update_catalog_to_gcs(gcp_bucket, catalog_path):
+    client = storage.Client(project=(os.getenv("GCP_PROJECT_NAME")))
+    bucket = client.bucket(gcp_bucket)
+    blob = bucket.blob("catalog.ducklake")
+    blob.upload_from_filename(catalog_path)
+    logger.info("Catalog uploaded to GCS successfully")
 
 def update_data(con, logger, bucket_name, folder_path, storage_type="s3"):
     """
