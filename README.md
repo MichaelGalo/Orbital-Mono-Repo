@@ -126,4 +126,5 @@ Typical flow: ingest -> store -> standardize/transform -> quality test -> clean 
 
 ## Deployment Links
 
- - [Server-less API](https://github.com/MichaelGalo/Orbital-API)
+ - [Server-less API Codebase](https://github.com/MichaelGalo/Orbital-API)
+ - [Server-less API Deployment Link](https://orbital-api-941477901286.us-central1.run.app/docs)
