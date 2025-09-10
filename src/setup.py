@@ -1,6 +1,6 @@
 import os
 from src.logger import setup_logging
-from src.utils import duckdb_con_init, ducklake_init, ducklake_attach_gcp, schema_creation
+from src.utils import duckdb_con_init, ducklake_init, ducklake_attach_gcp, schema_creation, update_catalog_to_gcs
 from dotenv import load_dotenv
 current_path = os.path.dirname(os.path.abspath(__file__))
 parent_path = os.path.abspath(os.path.join(current_path, ".."))
@@ -18,6 +18,7 @@ def setup():
     ducklake_attach_gcp(con)
     schema_creation(con)
     con.close()
+    update_catalog_to_gcs(gcp_bucket,catalog_path)
     logger.info("Setup completed successfully")
 
 if __name__ == "__main__":
