@@ -24,15 +24,16 @@ An end-to-end data engineering capstone that demonstrates a modern data lakehous
 
 ## Overview
 
-This project is a production-minded capstone that ingests public datasets related to Space Exploration, validates and standardizes them, and exposes clean, analysis/web-ready tables for downstream use. The primary goals are:
+This project is a production-minded capstone that ingests public datasets related to Space Exploration, validates and standardizes them, and exposes clean, analysis/web-ready datasets for downstream use. The primary goals are:
 
 - Demonstrate a modern lakehouse data architecture and medallion ELT patterns
 - Use fast, in-memory analytical engines (DuckDB + DuckLake) for exploration and testing
 - Provide repeatable pipelines and clear data quality checks that update automatically each day
 - Produce datasets that are ready for analytics, visualization, and/or loading into a cloud warehouse
 - Create clean, reusable code for future endeavors
+- Deploy a cloud-native, micro-services architecture to display a real-world use case
 
-The repository contains pipeline scripts, utilities, orchestration, API, and when run, a catalog of datasets arranged into raw, staged, and cleaned layers in the `data/` directory. The current .parquet files are gitignored for privacy.
+The repository contains pipeline scripts, utilities, orchestration, API, and when run, a catalog of datasets arranged into raw, staged, and cleaned layers in Google Cloud Storage.
 
 ## Data Sources
 
