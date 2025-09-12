@@ -1,11 +1,12 @@
 # Orbital
 
-An end-to-end data engineering capstone that demonstrates a modern data lakehouse pipeline using lightweight, file-based tooling with DuckDB and DuckLake to produce a production-capable data product.
-
 Orbital, simplifying the astronomical.
+
+An end-to-end data engineering capstone that demonstrates a modern data lakehouse pipeline using lightweight, file-based tooling with DuckDB and DuckLake to produce a production-capable data product.
 
 ## Table of contents
 
+- [Deployment Links](#deployment-links)
 - [Overview](#overview)
 - [Features](#features)
 - [Data Sources](#data-sources)
@@ -13,6 +14,13 @@ Orbital, simplifying the astronomical.
 - [Core technologies](#core-technologies)
 - [Data Schemas](#data-schemas)
 - [Running the project locally](#running-the-project-locally)
+
+## Deployment Links
+
+ - [Orbital Client](https://orbital-client-941477901286.us-central1.run.app/)
+ - [API Deployment Docs](https://orbital-api-941477901286.us-central1.run.app/docs)
+ - [Orbital Client Codebase](https://github.com/MichaelGalo/Orbital-Client)
+ - [API Codebase](https://github.com/MichaelGalo/Orbital-API)
 
 ## Overview
 
@@ -42,11 +50,11 @@ The repository contains pipeline scripts, utilities, orchestration, API, and whe
 - REST API programmatic data access for serving cleaned data
 - Data Quality Tests with custom Python & SQL
 - Unit tests with pytest and structured logging
-- Orchestration with Prefect for daily updated data
+- Orchestration for daily updated data
 
 ## Architecture
 
-![System Diagram](screenshots/Orbital_Architecture.png)
+![System Diagram](screenshots/Orbital_Architecture_2.0.png)
 
 ## Tech Stack
 
@@ -60,8 +68,11 @@ The repository contains pipeline scripts, utilities, orchestration, API, and whe
 | **Data Processing** | ![Polars](https://img.shields.io/badge/Polars-5A4FCF?style=flat-square&logo=rust&logoColor=white) | DataFrame manipulation |
 | **Testing** | ![pytest](https://img.shields.io/badge/pytest-009FE3?style=flat-square&logo=pytest&logoColor=white) | Automated testing |
 | **Data Quality** | ![SQL](https://img.shields.io/badge/SQL-0066CC?style=flat-square&logo=sql&logoColor=white) | Data quality checks using SQL |
-| **Orchestration** | ![Prefect](https://img.shields.io/badge/Prefect-3E4B99?style=flat-square&logo=prefect&logoColor=white) | Workflow automation and scheduling |
+| **Orchestration** | ![Google Scheduler](https://img.shields.io/badge/Google_Scheduler-3E4B99?style=flat-square&logo=prefect&logoColor=white) | Workflow automation and scheduling |
 | **CI/CD** | ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white) | Continuous integration and deployment |
+| **Data Access** | ![FastAPI](https://img.shields.io/badge/FastAPI-2E7D32?style=flat-square&logo=FastAPI&logoColor=white) | Programmatic Data Access & Documentation
+| **Data Visualization** | ![Next.js](https://img.shields.io/badge/Next.js-FF0000?style=flat-square&logo=nextdotjs&logoColor=white) | Web client for data access and visualization |
+| **Deployment** | ![GCP](https://img.shields.io/badge/Google_Cloud_Platform-4285F4?style=flat-square&logo=googlecloud&logoColor=white) | Cloud Run–based deployment of services |
 
 ## Data Schemas
 
